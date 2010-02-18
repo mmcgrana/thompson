@@ -1,144 +1,20 @@
 import java.util.*;
 
 class TreePair {
-  static class CaretType {
-    static final int R0  = 0;
-    static final int RNI = 1;
-    static final int RI  = 2;
-    static final int LL  = 3;
-    static final int I0  = 4;
-    static final int IR  = 5;
-    static final int L0  = 6;
-
-    static final int[][] WEIGHTS = {{0,2,2,1,1,3},
-                                    {2,2,2,1,1,3},
-                                    {2,2,2,1,3,3},
-                                    {1,1,1,2,2,2},
-                                    {1,1,3,2,2,4},
-                                    {3,3,3,2,4,4}};
-
-    static int contribution(int minusType, int plusType) {
-      if ((minusType == L0) || (plusType == L0)) {
-        assert ((minusType == L0) && (plusType == L0));
-        return 0;
-      } else {
-        return WEIGHTS[minusType][plusType];
-      }
-    }
-  }
-
-  class Node {
-    Node left, right, parent;
-
-    boolean isRoot() {
-      return parent == null;
-    }
-
-    boolean isLeaf() {
-      return this.left == null;
-    }
-
-    boolean isCaret() {
-      return this.left != null;
-    }
-
-    boolean isLeftChild() {
-      return this.parent.left == this;
-    }
-
-    boolean isRightChild() {
-      return this.parent.right == this;
-    }
-
-    boolean isLeftEdge() {
-      return (this.isRoot()) ||
-             (this.isLeftChild() && this.parent.isLeftEdge());
-    }
-
-    boolean isRightEdge() {
-      return (this.isRoot()) ||
-             (this.isRightChild() && this.parent.isRightEdge());
-    }
-
-    boolean isInterior() {
-      return !(this.isLeftEdge() || this.isRightEdge());
-    }
-
-    int exponent() {
-      if (this.isRightChild() || this.parent.isRightEdge()) {
-        return 0;
-      } else {
-        return this.parent.exponent() + 1;
-      }
-    }
-
-    int numCarets() {
-      if (this.isLeaf()) {
-        return 0;
-      } else {
-        return 1 + this.left.numCarets() + this.right.numCarets();
-      }
-    }
-
-    int numLeafs() {
-      return numCarets() + 1;
-    }
-
-    ArrayList<Node> leaves() {
-      ArrayList<Node> leaves = new ArrayList<Node>();
-      addLeaves(leaves, this);
-      return leaves;
-    }
-
-    void addLeaves(ArrayList<Node> leaves, Node node) {
-      if (node.isLeaf()) {
-        leaves.add(node);
-      } else {
-        addLeaves(leaves, node.left);
-        addLeaves(leaves, node.right);
-      }
-    }
-
-    ArrayList<Node> carets() {
-      ArrayList<Node> carets = new ArrayList<Node>();
-      addCarets(carets, this);
-      return carets;
-    }
-
-    void addCarets(ArrayList<Node> carets, Node node) {
-      if (node.isCaret()) {
-        addCarets(carets, node.left);
-        carets.add(node);
-        addCarets(carets, node.right);
-      }
-    }
-
-    int[] caretTypes() {
-      ArrayList<Node> carets = this.carets();
-      int numCarets = this.numCarets();
-      int[] caretTypes = new int[numCarets];
-      int prevInteriorIdx = -1;
-      for (int i = (numCarets - 1); i >= 0; i++) {
-        Node caret = carets.get(i);
-        if (caret.isLeftEdge()) {
-          caretTypes[i] = caret.isRoot() ? CaretType.L0 : CaretType.LL;
-        } else if (caret.isInterior()) {
-          prevInteriorIdx = i;
-          caretTypes[i] = caret.right.isLeaf() ? CaretType.I0: CaretType.IR;
-        } else {
-          assert caret.isRightEdge();
-          if (prevInteriorIdx == -1) {
-            caretTypes[i] = CaretType.R0;
-          } else {
-            caretTypes[i] = prevInteriorIdx == (i + 1) ? CaretType.RI : CaretType.RNI;
-          }
-        }
-      }
-      return caretTypes;
-    }
-  }
-
   Node minusRoot, plusRoot;
+
+  TreePair(Node minusRoot, Node plusRoot) {
+    this.minusRoot = minusRoot;
+    this.plusRoot = plusRoot;
+  }
+
+  TreePair copy() {
+    return new TreePair(this.minusRoot.copy(), this.plusRoot.copy());
+  }
+  
+  public String toString() {
+    return "[" + minusRoot.toString() + "|" + plusRoot.toString() + "]"; 
+  }
 
   NormalForm toNormalForm() {
     NormalForm normalForm = new NormalForm();
@@ -154,7 +30,7 @@ class TreePair {
     for (int index = numLeaves - 1; index >= 0; index--) {
       int exponent = leaves.get(index).exponent();
       if (exponent > 0) {
-        normalForm.addTerm(index, exponent);
+        normalForm.addTerm(index, -exponent);
       }
     }
     return normalForm;
@@ -169,5 +45,118 @@ class TreePair {
       length += CaretType.contribution(minusTypes[i], plusTypes[i]);
     }
     return length;
+  }
+
+  // mutates self
+  void reduce() {
+    boolean passNeeded = true;
+    while (passNeeded) {
+      passNeeded = false;
+      ArrayList<Node> minusLeaves = this.minusRoot.leaves();
+      ArrayList<Node> plusLeaves  = this.plusRoot.leaves();
+      int numLeaves = minusLeaves.size();
+      assert numLeaves == plusLeaves.size();
+      for (int i = 0; i < numLeaves - 1; i++) {
+        Node minusA = minusLeaves.get(i);
+        Node minusB = minusLeaves.get(i+1);
+        if (minusA.parent == minusB.parent) {
+          Node plusA = plusLeaves.get(i);
+          Node plusB = plusLeaves.get(i+1);
+          if (plusA.parent == plusB.parent) {
+            minusA.parent.prune();
+            plusA.parent.prune();
+            passNeeded = true;
+          }
+        }
+      }
+    }
+  }
+  
+  void unifyFrom(Node plus,  ArrayList<Node> plusComplements,
+                 Node minus, ArrayList<Node> minusComplements) {
+    if (plus.isLeaf() && minus.isLeaf()) {
+      return;
+    } else if (plus.isCaret() && minus.isCaret()) {
+      unifyFrom(plus.left, plusComplements, minus.left, minusComplements);
+      unifyFrom(plus.right, plusComplements, minus.right, minusComplements);
+    } else if (plus.isLeaf() && minus.isCaret()) {
+      plus.replace(minus.copy());
+      plusComplements.get(plus.index).replace(minus.copy());
+    } else {
+      assert plus.isCaret() && minus.isLeaf();
+      minus.replace(plus.copy());
+      minusComplements.get(minus.index).replace(plus.copy());
+    }
+  }
+
+  // mutates both
+  void unify(TreePair treePairLeft, TreePair treePairRight) {
+    Node plus = treePairLeft.plusRoot;
+    Node minus = treePairRight.minusRoot;
+    plus.indexLeaves();
+    minus.indexLeaves();
+    ArrayList<Node> plusComplements = treePairLeft.minusRoot.leaves();
+    ArrayList<Node> minusComplements = treePairRight.plusRoot.leaves();
+    unifyFrom(plus, plusComplements, minus, minusComplements);
+  }
+  
+  // mutates self, arg
+  void rightMultiplyBy(TreePair treePair) {
+    unify(treePair, this);
+    this.minusRoot = treePair.minusRoot;
+    this.reduce();
+  }
+
+  static TreePair X0 =
+    new TreePair(new Node(new Node(), new Node(new Node(), new Node())),
+                 new Node(new Node(new Node(), new Node()), new Node()));
+  static TreePair X0_INVERSE =
+    new TreePair(new Node(new Node(new Node(), new Node()), new Node()),
+                 new Node(new Node(), new Node(new Node(), new Node())));
+  static TreePair X1 =
+    new TreePair(new Node(new Node(), new Node(new Node(), new Node(new Node(), new Node()))),
+                 new Node(new Node(), new Node(new Node(new Node(), new Node()), new Node())));
+  static TreePair X1_INVERSE =
+    new TreePair(new Node(new Node(), new Node(new Node(new Node(), new Node()), new Node())),
+                 new Node(new Node(), new Node(new Node(), new Node(new Node(), new Node()))));
+
+  static TreePair product(ArrayList<TreePair> factors) {
+    int numFactors = factors.size();
+    TreePair accum = factors.get(0).copy();
+    for (int i = 1; i < numFactors; i++) {
+      accum.rightMultiplyBy(factors.get(i).copy());
+    }
+    return accum;
+  }
+    
+  public static void main(String args[]) {
+    // System.out.println(X0); 
+    // System.out.println(X0.wordLength());
+    // System.out.println(X0.toNormalForm());
+
+    // ArrayList<TreePair> factors = new ArrayList<TreePair>();
+    // factors.add(X0);
+    // factors.add(X0);
+    // factors.add(X0);
+    // factors.add(X0_INVERSE);
+    // TreePair product = TreePair.product(factors);
+    // System.out.println(product);
+    // System.out.println(product.wordLength());
+    // System.out.println(product.toNormalForm());
+    
+    ArrayList<TreePair> factors = new ArrayList<TreePair>();
+    factors.add(X0_INVERSE);
+    factors.add(X0_INVERSE);
+    factors.add(X1_INVERSE);
+    factors.add(X1_INVERSE);
+    factors.add(X0_INVERSE);
+    factors.add(X1_INVERSE);
+    factors.add(X0_INVERSE);
+    factors.add(X0_INVERSE);
+    TreePair product = TreePair.product(factors);
+    System.out.println(product);
+    System.out.println(product.wordLength());
+    System.out.println(product.toNormalForm());
+    
   }
 }
