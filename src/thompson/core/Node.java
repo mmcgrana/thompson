@@ -1,3 +1,5 @@
+package thompson.core;
+
 import java.util.*;
 
 class Node {

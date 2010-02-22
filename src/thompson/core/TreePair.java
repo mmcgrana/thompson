@@ -1,3 +1,5 @@
+package thompson.core;
+
 import java.util.*;
 
 class TreePair {
@@ -16,8 +18,8 @@ class TreePair {
     return "[" + minusRoot.toString() + "|" + plusRoot.toString() + "]"; 
   }
 
-  NormalForm toNormalForm() {
-    NormalForm normalForm = new NormalForm();
+  BaseExponent toNormalForm() {
+    BaseExponent normalForm = new BaseExponent();
     ArrayList<Node> leaves = this.plusRoot.leaves();
     int numLeaves = leaves.size();
     for (int index = 0; index < numLeaves; index++) {
@@ -127,36 +129,5 @@ class TreePair {
       accum.rightMultiplyBy(factors.get(i).copy());
     }
     return accum;
-  }
-    
-  public static void main(String args[]) {
-    // System.out.println(X0); 
-    // System.out.println(X0.wordLength());
-    // System.out.println(X0.toNormalForm());
-
-    // ArrayList<TreePair> factors = new ArrayList<TreePair>();
-    // factors.add(X0);
-    // factors.add(X0);
-    // factors.add(X0);
-    // factors.add(X0_INVERSE);
-    // TreePair product = TreePair.product(factors);
-    // System.out.println(product);
-    // System.out.println(product.wordLength());
-    // System.out.println(product.toNormalForm());
-    
-    ArrayList<TreePair> factors = new ArrayList<TreePair>();
-    factors.add(X0_INVERSE);
-    factors.add(X0_INVERSE);
-    factors.add(X1_INVERSE);
-    factors.add(X1_INVERSE);
-    factors.add(X0_INVERSE);
-    factors.add(X1_INVERSE);
-    factors.add(X0_INVERSE);
-    factors.add(X0_INVERSE);
-    TreePair product = TreePair.product(factors);
-    System.out.println(product);
-    System.out.println(product.wordLength());
-    System.out.println(product.toNormalForm());
-    
   }
 }
