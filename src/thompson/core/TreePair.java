@@ -54,6 +54,43 @@ public class TreePair {
     return new BaseExponent(bases, exponents);
   }
 
+  private static Node fromTermStraight(int base, int exponent) {
+    Node root = new Node();
+    Node tail = root;
+    for (int i = 0; i < base + exponent; i++) {
+      tail.setRight(new Node());
+      tail = tail.right;
+    }
+    return root;
+  }
+
+  private static Node fromTermBent(int base, int exponent) {
+    Node root = new Node();
+    Node tail = root;
+    for (int i = 0; i < base - 1; i++) {
+      tail.setRight(new Node());
+      tail = tail.right;
+    }
+    for (int i = 0; i < exponent; i++) {
+      tail.setLeft(new Node());
+      tail = tail.left;
+    }
+    return root;
+  }
+
+  public static TreePair fromTerm(int base, int exponent) {
+    if ((exponent == 0) || (base < 0)) {
+      throw new IllegalArgumentException();
+    }
+    if (exponent < 0) {
+      return new TreePair(fromTermBent(base, exponent),
+                          fromTermStraight(base, exponent));
+    } else {
+      return new TreePair(fromTermStraight(base, exponent),
+                          fromTermBent(base, exponent));
+    }
+  }
+
   // Returns the world length with respect to the {x_0,x_1} generating set
   public int wordLength() {
     int[] minusTypes = minusRoot.caretTypes();

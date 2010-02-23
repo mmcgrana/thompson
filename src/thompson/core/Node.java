@@ -6,28 +6,28 @@ public class Node {
   protected Node left, right, parent;
   protected int index;
   
-  private Node() {}
+  protected Node() {}
   
-  private Node(Node left, Node right) {
+  protected Node(Node left, Node right) {
     this.setLeft(left);
     this.setRight(right);
   }
   
-  private void setLeft(Node left) {
+  protected void setLeft(Node left) {
     this.left = left;
     if (left != null) {
       left.parent = this;
     }
   }
   
-  private void setRight(Node right) {
+  protected void setRight(Node right) {
     this.right = right;
     if (right != null) {
       right.parent = this;
     }
   }
 
-  private void setParent(Node parent) {
+  protected void setParent(Node parent) {
     this.parent = parent;
   }
   
