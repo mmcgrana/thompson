@@ -2,30 +2,23 @@ package thompson.core;
 
 import java.util.*;
 
-class BaseExponent {
-  ArrayList<Integer> bases, exponents;
+public class BaseExponent {
+  public int[] bases, exponents;
   
-  BaseExponent(ArrayList<Integer> bases, ArrayList<Integer> exponents) {
-    assert bases.size() == exponents.size();
+  public BaseExponent(int[] bases, int[] exponents) {
+    if (!(bases.length == exponents.length)) {
+      throw new IllegalArgumentException();
+    }
     this.bases = bases;
     this.exponents = exponents;
   }
-
-  BaseExponent() {
-    this(new ArrayList<Integer>(), new ArrayList<Integer>());
-  }
-
-  void addTerm(int base, int exponent) {
-    this.bases.add(base);
-    this.exponents.add(exponent);
-  }
   
-  BaseExponent toNormalForm() {
-    int origSize = this.bases.size();
-    Integer[] bases = new Integer[origSize];
-    Integer[] exponents = new Integer[origSize];
-    bases = this.bases.toArray(bases);
-    exponents = this.exponents.toArray(exponents);
+  public BaseExponent toNormalForm() {
+    int origSize = this.bases.length;
+    int[] bases = new int[origSize];
+    int[] exponents = new int[origSize];
+    System.arraycopy(this.bases, 0, bases, 0, origSize);
+    System.arraycopy(this.exponents, 0, exponents, 0, origSize);
     
     // shuffle
     int leftDone = 0;
@@ -70,7 +63,7 @@ class BaseExponent {
           bases[i+1] = baseJ + exponentA;
           exponents[i+1] = exponentB; 
         }
-        leftDone += 1;
+        leftDone++;
       } else {
         assert shufNegBase <= shufPosBase;
         for (int i = shufNegI; i < (rightDone - 1); i++) {
@@ -83,36 +76,47 @@ class BaseExponent {
           bases[i+1] = baseI;
           exponents[i+1] = -exponentA;
         }
-        rightDone += 1;
+        rightDone++;
       }
     }
     
     // coalesce
-    ArrayList<Integer> coalBases = new ArrayList<Integer>();
-    ArrayList<Integer> coalExponents = new ArrayList<Integer>();
+    int[] coalBases = new int[origSize];
+    int[] coalExponents = new int[origSize];
     int i = 0;
+    int j = 0;
     while (i < origSize) {
       int coalBase = bases[i];
       int coalExponent = exponents[i];
-      i += 1;
+      i++;
       while (bases[i] == coalBase) {
         coalExponent += exponents[i];
-        i += 1;
+        i++;
       }
       if (coalExponent != 0) {
-        coalBases.add(coalBase);
-        coalExponents.add(coalExponent);
+        coalBases[j] = coalBase;
+        coalExponents[j] = coalExponent;
+        j++;
       }
     }
     
-    return new BaseExponent(coalBases, coalExponents);
+    // pack
+    int[] coalBasesTight = new int[j];
+    int[] coalExponentsTight = new int[j];
+    System.arraycopy(coalBases, 0, coalBasesTight, 0, j);
+    System.arraycopy(coalExponents, 0, coalExponentsTight, 0, j);    
+    return new BaseExponent(coalBasesTight, coalExponentsTight);
   }
 
+  public static BaseExponent fromString(String in) {
+    
+  }
+  
   public String toString() {
     StringBuilder buf = new StringBuilder();
-    for (int i = 0; i < this.bases.size(); i++) {
-      int base = this.bases.get(i);
-      int exponent = this.exponents.get(i);
+    for (int i = 0; i < this.bases.length; i++) {
+      int base = this.bases[i];
+      int exponent = this.exponents[i];
       buf.append("(x_" + base + "^" + exponent + ")");
     }
     return buf.toString();

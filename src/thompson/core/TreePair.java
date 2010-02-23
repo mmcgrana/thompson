@@ -2,15 +2,15 @@ package thompson.core;
 
 import java.util.*;
 
-class TreePair {
-  Node minusRoot, plusRoot;
+public class TreePair {
+  private Node minusRoot, plusRoot;
 
-  TreePair(Node minusRoot, Node plusRoot) {
+  public TreePair(Node minusRoot, Node plusRoot) {
     this.minusRoot = minusRoot;
     this.plusRoot = plusRoot;
   }
 
-  TreePair copy() {
+  public TreePair copy() {
     return new TreePair(this.minusRoot.copy(), this.plusRoot.copy());
   }
   
@@ -18,27 +18,44 @@ class TreePair {
     return "[" + minusRoot.toString() + "|" + plusRoot.toString() + "]"; 
   }
 
-  BaseExponent toNormalForm() {
-    BaseExponent normalForm = new BaseExponent();
+  public BaseExponent toNormalForm() {
+    // size the product
+    int numTerms = 0;
+    for (Node leaf : this.plusRoot.leaves()) {
+      if (leaf.exponent() > 0) { numTerms++; }
+    }
+    for (Node leaf : this.minusRoot.leaves()) {
+      if (leaf.exponent() > 0 ) { numTerms++; }
+    }
+    int[] bases = new int[numTerms];
+    int[] exponents = new int[numTerms];
+    
+    // fill the product
+    int i = 0;
     ArrayList<Node> leaves = this.plusRoot.leaves();
     int numLeaves = leaves.size();
     for (int index = 0; index < numLeaves; index++) {
       int exponent = leaves.get(index).exponent();
       if (exponent > 0) {
-        normalForm.addTerm(index, exponent);
+        bases[i] = index;
+        exponents[i] = exponent;
+        i++;
       }
     }
     leaves = this.minusRoot.leaves();
     for (int index = numLeaves - 1; index >= 0; index--) {
       int exponent = leaves.get(index).exponent();
       if (exponent > 0) {
-        normalForm.addTerm(index, -exponent);
+        bases[i] = index;
+        exponents[i] = -exponent;
+        i++;
       }
     }
-    return normalForm;
+    return new BaseExponent(bases, exponents);
   }
 
-  int wordLength() {
+  // Returns the world length with respect to the {x_0,x_1} generating set
+  public int wordLength() {
     int[] minusTypes = minusRoot.caretTypes();
     int[] plusTypes  = plusRoot.caretTypes();
     int numCarets = minusTypes.length;
@@ -49,8 +66,10 @@ class TreePair {
     return length;
   }
 
-  // mutates self
-  void reduce() {
+  // Eliminates common carrots between the tree pairs
+  // Mutates the instance
+  // OPTIMIZE: more efficient reduction approach
+  private void reduce() {
     boolean passNeeded = true;
     while (passNeeded) {
       passNeeded = false;
@@ -74,8 +93,9 @@ class TreePair {
     }
   }
   
-  void unifyFrom(Node plus,  ArrayList<Node> plusComplements,
-                 Node minus, ArrayList<Node> minusComplements) {
+  // Helper for unify
+  private static void unifyFrom(Node plus, ArrayList<Node> plusComplements,
+                                Node minus, ArrayList<Node> minusComplements) {
     if (plus.isLeaf() && minus.isLeaf()) {
       return;
     } else if (plus.isCaret() && minus.isCaret()) {
@@ -91,8 +111,10 @@ class TreePair {
     }
   }
 
-  // mutates both
-  void unify(TreePair treePairLeft, TreePair treePairRight) {
+  // Modifies the tree pairs so that the plus tree of the left is the same
+  // as the minus tree of the right.
+  // Mutates both instances
+  private static void unify(TreePair treePairLeft, TreePair treePairRight) {
     Node plus = treePairLeft.plusRoot;
     Node minus = treePairRight.minusRoot;
     plus.indexLeaves();
@@ -102,31 +124,22 @@ class TreePair {
     unifyFrom(plus, plusComplements, minus, minusComplements);
   }
   
-  // mutates self, arg
-  void rightMultiplyBy(TreePair treePair) {
-    unify(treePair, this);
-    this.minusRoot = treePair.minusRoot;
-    this.reduce();
+  // Returns fg
+  public static TreePair multiply(TreePair f, TreePair g) {
+    TreePair fCopy = f.copy();
+    TreePair gCopy = g.copy();
+    unify(gCopy, fCopy);
+    TreePair product = new TreePair(gCopy.plusRoot, fCopy.minusRoot);
+    product.reduce();
+    return product;
   }
 
-  static TreePair X0 =
-    new TreePair(new Node(new Node(), new Node(new Node(), new Node())),
-                 new Node(new Node(new Node(), new Node()), new Node()));
-  static TreePair X0_INVERSE =
-    new TreePair(new Node(new Node(new Node(), new Node()), new Node()),
-                 new Node(new Node(), new Node(new Node(), new Node())));
-  static TreePair X1 =
-    new TreePair(new Node(new Node(), new Node(new Node(), new Node(new Node(), new Node()))),
-                 new Node(new Node(), new Node(new Node(new Node(), new Node()), new Node())));
-  static TreePair X1_INVERSE =
-    new TreePair(new Node(new Node(), new Node(new Node(new Node(), new Node()), new Node())),
-                 new Node(new Node(), new Node(new Node(), new Node(new Node(), new Node()))));
-
-  static TreePair product(ArrayList<TreePair> factors) {
-    int numFactors = factors.size();
-    TreePair accum = factors.get(0).copy();
+  // Returns the product of the given factors
+  public static TreePair product(TreePair[] factors) {
+    int numFactors = factors.length;
+    TreePair accum = factors[0];
     for (int i = 1; i < numFactors; i++) {
-      accum.rightMultiplyBy(factors.get(i).copy());
+      accum = multiply(accum, factors[i]);
     }
     return accum;
   }

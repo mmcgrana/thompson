@@ -2,77 +2,78 @@ package thompson.core;
 
 import java.util.*;
 
-class Node {
-  Node left, right, parent;
-  int index;
+public class Node {
+  protected Node left, right, parent;
+  protected int index;
   
-  Node() {}
+  private Node() {}
   
-  Node(Node left, Node right) {
+  private Node(Node left, Node right) {
     this.setLeft(left);
     this.setRight(right);
-    this.left.setParent(this);
-    this.right.setParent(this);
   }
   
-  void setLeft(Node left) {
-    assert this != left;
+  private void setLeft(Node left) {
     this.left = left;
+    if (left != null) {
+      left.parent = this;
+    }
   }
   
-  void setRight(Node right) {
-    assert this != right;
+  private void setRight(Node right) {
     this.right = right;
+    if (right != null) {
+      right.parent = this;
+    }
   }
 
-  void setParent(Node parent) {
-    assert this != parent;
+  private void setParent(Node parent) {
     this.parent = parent;
   }
   
   public String toString() {
-    if (this.isLeaf()) {
-      return "*";
-    } else {
-      return "(" + left.toString() + right.toString() + ")";
-    }
+    return this.isLeaf() ? "*" : ("(" + left.toString() + right.toString() + ")");
   }
 
-  boolean isRoot() {
+  public boolean isRoot() {
     return parent == null;
   }
   
-  boolean isLeaf() {
+  public boolean isLeaf() {
     return this.left == null;
   }
   
-  boolean isCaret() {
+  public boolean isCaret() {
     return this.left != null;
   }
   
-  boolean isLeftChild() {
+  public boolean isLeftChild() {
     return this.parent.left == this;
   }
   
-  boolean isRightChild() {
+  public boolean isRightChild() {
     return this.parent.right == this;
   }
   
-  boolean isLeftEdge() {
+  // OPTIMIZE: precompute
+  public boolean isLeftEdge() {
     return (this.isRoot()) ||
            (this.isLeftChild() && this.parent.isLeftEdge());
   }
   
-  boolean isRightEdge() {
+  // OPTIMIZE: precompute
+  public boolean isRightEdge() {
     return (this.isRoot()) ||
            (this.isRightChild() && this.parent.isRightEdge());
   }
   
-  boolean isInterior() {
+  // OPTIMIZE: based on above
+  public boolean isInterior() {
     return !(this.isLeftEdge() || this.isRightEdge());
   }
   
-  int exponent() {
+  // OPTIMIZE: precompute
+  public int exponent() {
     if (this.isRightChild() || this.parent.isRightEdge()) {
       return 0;
     } else {
@@ -80,7 +81,7 @@ class Node {
     }
   }
   
-  int numCarets() {
+  public int numCarets() {
     if (this.isLeaf()) {
       return 0;
     } else {
@@ -88,17 +89,18 @@ class Node {
     }
   }
   
-  int numLeafs() {
+  public int numLeaves() {
     return numCarets() + 1;
   }
   
-  ArrayList<Node> leaves() {
+  // Returns an inorder List of leaf Nodes
+  public ArrayList<Node> leaves() {
     ArrayList<Node> leaves = new ArrayList<Node>();
     addLeaves(leaves, this);
     return leaves;
   }
   
-  void addLeaves(ArrayList<Node> leaves, Node node) {
+  private void addLeaves(ArrayList<Node> leaves, Node node) {
     if (node.isLeaf()) {
       leaves.add(node);
     } else {
@@ -107,11 +109,12 @@ class Node {
     }
   }
   
-  void indexLeaves() {
+  // TODO: doc
+  protected void indexLeaves() {
     this.indexLeavesFrom(0);
   }
   
-  int indexLeavesFrom(int from) {
+  private int indexLeavesFrom(int from) {
     if (this.isLeaf()) {
       this.index = from;
       return from + 1;
@@ -121,13 +124,14 @@ class Node {
     }
   }
   
-  ArrayList<Node> carets() {
+  // Returns an inorder List of caret Nodes
+  public ArrayList<Node> carets() {
     ArrayList<Node> carets = new ArrayList<Node>();
     addCarets(carets, this);
     return carets;
   }
   
-  void addCarets(ArrayList<Node> carets, Node node) {
+  private void addCarets(ArrayList<Node> carets, Node node) {
     if (node.isCaret()) {
       addCarets(carets, node.left);
       carets.add(node);
@@ -135,7 +139,8 @@ class Node {
     }
   }
   
-  int[] caretTypes() {
+  // Returns an array of CaretType ints corresponding to the inorder carets
+  public int[] caretTypes() {
     ArrayList<Node> carets = this.carets();
     int numCarets = this.numCarets();
     int[] caretTypes = new int[numCarets];
@@ -159,66 +164,28 @@ class Node {
     return caretTypes;
   }
   
-  // mutates self
-  void rotateRight() {
-    assert this.left.isCaret();
-    Node a = this.left.left;
-    Node b = this.left.right;
-    Node c = this.right;
-    Node d = new Node();
-    this.setLeft(a);
-    a.setParent(this);
-    this.setRight(d);
-    d.setParent(this);
-    d.setLeft(b);
-    b.setParent(d);
-    d.setRight(c);
-    c.setParent(d);
-  }
-  
-  // mutates self
-  void rotateLeft() {
-    assert this.right.isCaret();
-    Node a = this.left;
-    Node b = this.right.left;
-    Node c = this.right.right;
-    Node d = new Node();
-    this.setRight(c);
-    c.setParent(this);
-    this.setLeft(d);
-    d.setParent(this);
-    d.setLeft(a);
-    a.setParent(d);
-    d.setRight(b);
-    b.setParent(d);
-  }
-  
-  // mutates self
-  void prune() {
+  // Destructively removes this instance's left and right children.
+  protected void prune() {
     this.setLeft(null);
     this.setRight(null);
   }
   
-  // mutates self
-  void grow() {
+  // Destructively adds single-node left and right children
+  protected void grow() {
     this.setLeft(new Node());
     this.setRight(new Node());
-    this.left.setParent(this);
-    this.right.setParent(this);
   }
   
-  void replace(Node with) {
+  // Destructively replaces this node
+  protected void replace(Node with) {
     if (this.isLeftChild()) {
       this.parent.setLeft(with);
-      with.setParent(this.parent);
     } else {
-      assert this.isRightChild();
       this.parent.setRight(with);
-      with.setParent(this.parent);
     }
   }
   
-  Node copy() {
+  public Node copy() {
     if (this.isLeaf()) {
       return new Node();
     } else {
@@ -226,9 +193,7 @@ class Node {
       Node right = this.right.copy();
       Node copy = new Node();
       copy.setLeft(left);
-      copy.left.setParent(copy);
       copy.setRight(right);
-      copy.right.setParent(copy);
       return copy;
     }
   }

@@ -18,11 +18,10 @@ public class CaretType {
 
   public static int contribution(int minusType, int plusType) {
     if ((minusType == L0) || (plusType == L0)) {
-      if ((minusType == L0) && (plusType == L0)) {
-        return 0;
-      } else {
+      if (!((minusType == L0) && (plusType == L0))) {
         throw new IllegalArgumentException();
       }
+      return 0;
     } else {
       return WEIGHTS[minusType][plusType];
     }
