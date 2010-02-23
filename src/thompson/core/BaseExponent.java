@@ -103,7 +103,7 @@ public class BaseExponent {
       }
       int shufNegBase = -1;
       int shufNegI = -1;
-      for (int i = rightDone - 1; i >= leftDone; i++) {
+      for (int i = rightDone - 1; i >= leftDone; i--) {
         int exponent = exponents[i];
         int base = bases[i];
         if ((exponent < 0) &&
@@ -117,7 +117,8 @@ public class BaseExponent {
       // for i < j:
       //   (x_j^b)(x_i^a) = (x_i^a)(x_j+a^b)
       //   (x_i^-a)(x_j^b) = (x_j+a^b)(x_i^-a)
-      if (shufPosBase < shufNegBase) {
+      if ((shufPosBase >= 0) && ((shufNegBase < 0) ||
+                                (shufPosBase < shufNegBase))) {
         for (int i = shufPosI - 1; i >= leftDone; i--) {
           int baseI = bases[i+1];
           int exponentA = exponents[i+1];
@@ -130,7 +131,10 @@ public class BaseExponent {
         }
         leftDone++;
       } else {
-        assert shufNegBase <= shufPosBase;
+        if (!((shufNegBase >= 0) && ((shufPosBase < 0) ||
+                                    (shufNegBase <= shufPosBase)))) {
+          throw new RuntimeException();                              
+        }
         for (int i = shufNegI; i < (rightDone - 1); i++) {
           int baseI = bases[i];
           int exponentA = -exponents[i];
@@ -141,7 +145,7 @@ public class BaseExponent {
           bases[i+1] = baseI;
           exponents[i+1] = -exponentA;
         }
-        rightDone++;
+        rightDone--;
       }
     }
 

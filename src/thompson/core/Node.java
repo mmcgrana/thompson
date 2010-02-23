@@ -153,7 +153,7 @@ public class Node {
         prevInteriorIdx = i;
         caretTypes[i] = caret.right.isLeaf() ? CaretType.I0: CaretType.IR;
       } else {
-        assert caret.isRightEdge();
+        if (!caret.isRightEdge()) { throw new RuntimeException(); }
         if (prevInteriorIdx == -1) {
           caretTypes[i] = CaretType.R0;
         } else {
@@ -178,7 +178,10 @@ public class Node {
   
   // Destructively replaces this node
   protected void replace(Node with) {
-    if (this.isLeftChild()) {
+    if (this.isRoot()) {
+      this.setLeft(with.left);
+      this.setRight(with.right);
+    } else if (this.isLeftChild()) {
       this.parent.setLeft(with);
     } else {
       this.parent.setRight(with);

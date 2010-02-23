@@ -6,6 +6,9 @@ public class TreePair {
   private Node minusRoot, plusRoot;
 
   public TreePair(Node minusRoot, Node plusRoot) {
+    if ((minusRoot == null) || (plusRoot == null)) {
+      throw new IllegalArgumentException();
+    }
     this.minusRoot = minusRoot;
     this.plusRoot = plusRoot;
   }
@@ -57,7 +60,8 @@ public class TreePair {
   private static Node fromTermStraight(int base, int exponent) {
     Node root = new Node();
     Node tail = root;
-    for (int i = 0; i < base + exponent; i++) {
+    for (int i = 0; i < base + exponent + 2; i++) {
+      tail.setLeft(new Node());
       tail.setRight(new Node());
       tail = tail.right;
     }
@@ -66,14 +70,18 @@ public class TreePair {
 
   private static Node fromTermBent(int base, int exponent) {
     Node root = new Node();
-    Node tail = root;
-    for (int i = 0; i < base - 1; i++) {
-      tail.setRight(new Node());
+    root.setLeft(new Node());
+    root.setRight(new Node());
+    Node tail = root;    
+    for (int i = 0; i < base; i++) {
       tail = tail.right;
-    }
-    for (int i = 0; i < exponent; i++) {
       tail.setLeft(new Node());
+      tail.setRight(new Node());
+    }
+    for (int i = 0; i < exponent + 1; i++) {
       tail = tail.left;
+      tail.setLeft(new Node());
+      tail.setRight(new Node());
     }
     return root;
   }
@@ -83,8 +91,8 @@ public class TreePair {
       throw new IllegalArgumentException();
     }
     if (exponent < 0) {
-      return new TreePair(fromTermBent(base, exponent),
-                          fromTermStraight(base, exponent));
+      return new TreePair(fromTermBent(base, -exponent),
+                          fromTermStraight(base, -exponent));
     } else {
       return new TreePair(fromTermStraight(base, exponent),
                           fromTermBent(base, exponent));
@@ -113,7 +121,6 @@ public class TreePair {
       ArrayList<Node> minusLeaves = this.minusRoot.leaves();
       ArrayList<Node> plusLeaves  = this.plusRoot.leaves();
       int numLeaves = minusLeaves.size();
-      assert numLeaves == plusLeaves.size();
       for (int i = 0; i < numLeaves - 1; i++) {
         Node minusA = minusLeaves.get(i);
         Node minusB = minusLeaves.get(i+1);
@@ -142,7 +149,6 @@ public class TreePair {
       plus.replace(minus.copy());
       plusComplements.get(plus.index).replace(minus.copy());
     } else {
-      assert plus.isCaret() && minus.isLeaf();
       minus.replace(plus.copy());
       minusComplements.get(minus.index).replace(plus.copy());
     }
@@ -166,7 +172,7 @@ public class TreePair {
     TreePair fCopy = f.copy();
     TreePair gCopy = g.copy();
     unify(gCopy, fCopy);
-    TreePair product = new TreePair(gCopy.plusRoot, fCopy.minusRoot);
+    TreePair product = new TreePair(gCopy.minusRoot, fCopy.plusRoot);
     product.reduce();
     return product;
   }
