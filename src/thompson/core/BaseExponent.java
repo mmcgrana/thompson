@@ -177,9 +177,26 @@ public class BaseExponent {
     return new BaseExponent(coalBasesTight, coalExponentsTight);
   }
 
-  // public boolean isNormalForm() {
-  //
-  // }
+  public boolean isNormalForm() {
+    int prevBase = this.bases[0];
+    int prevExponent = this.exponents[0];
+    for (int i = 1; i < this.numTerms(); i++) {
+      int nextBase = this.bases[i];
+      int nextExponent = this.exponents[i];
+      if ((prevExponent > 0) && (nextExponent > 0)) {
+        if (!(nextBase > prevBase)) { return false; }
+      } else if ((prevExponent < 0) && (nextExponent < 0)) {
+        if (!(nextBase < prevBase)) { return false; }
+      } else if ((prevExponent > 0) && (nextExponent < 0)) {
+        // ok
+      } else {
+        return false;
+      }
+      prevBase = nextBase;
+      prevExponent = nextExponent;
+    }
+    return true;
+  }
 
   // Returns a TreePair corresponding to this instance.
   public TreePair toTreePair() {
@@ -188,5 +205,28 @@ public class BaseExponent {
       factors[i] = TreePair.fromTerm(this.bases[i], this.exponents[i]);
     }
     return TreePair.product(factors);
+  }
+  
+  // Returns fg in normal form
+  public static BaseExponent multiply(BaseExponent f, BaseExponent g) {
+    BaseExponent[] factors = {f, g};
+    return product(factors);
+  }
+  
+  // Returns the product of the given factors, in normal form.
+  public static BaseExponent product(BaseExponent[] factors) {
+    int totalTerms = 0;
+    for (BaseExponent factor : factors) {
+      totalTerms += factor.numTerms();
+    }
+    int[] bases = new int[totalTerms];
+    int[] exponents = new int[totalTerms];
+    int i = 0;
+    for (BaseExponent factor : factors) {
+      System.arraycopy(factor.bases, 0, bases, i, factor.numTerms());
+      System.arraycopy(factor.bases, 0, bases, i, factor.numTerms());
+      i += factor.numTerms();
+    }
+    return new BaseExponent(bases, exponents).toNormalForm();
   }
 }
