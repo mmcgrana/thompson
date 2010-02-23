@@ -8,3 +8,6 @@
     "(x_1^2)(x_3^-4)"
     "(x_1^2)(x_3^-4)(x_1^50)(x_50^1)"))
 
+(deftest test-to-normal-form
+  (are [gf nf] (= nf (.toString (.toNormalForm (BaseExponent/fromString gf))))
+    "(x_1^2)" "(x_1^2)"))

@@ -32,6 +32,13 @@ public class BaseExponent {
     }
     return array;
   }
+  
+  private static int[] intArrayCopy(int [] ints) {
+    int size = ints.length;
+    int[] copies = new int[size];
+    System.arraycopy(ints, 0, copies, 0, size);
+    return copies;
+  }
 
   private static String checkNext(Parser parser, Pattern pattern, String expected) {
     String str;
@@ -75,15 +82,13 @@ public class BaseExponent {
 
   public BaseExponent toNormalForm() {
     int origSize = this.numTerms();
-    int[] bases = new int[origSize];
-    int[] exponents = new int[origSize];
-    System.arraycopy(this.bases, 0, bases, 0, origSize);
-    System.arraycopy(this.exponents, 0, exponents, 0, origSize);
+    int[] bases = intArrayCopy(this.bases);
+    int[] exponents = intArrayCopy(this.exponents);
 
     // shuffle
     int leftDone = 0;
     int rightDone = origSize;
-    while (leftDone != rightDone) {
+    while (leftDone < rightDone - 1) {
       // find element to shuffle
       int shufPosBase = -1;
       int shufPosI = -1;
@@ -149,7 +154,7 @@ public class BaseExponent {
       int coalBase = bases[i];
       int coalExponent = exponents[i];
       i++;
-      while (bases[i] == coalBase) {
+      while ((i < origSize) && (bases[i] == coalBase)) {
         coalExponent += exponents[i];
         i++;
       }
