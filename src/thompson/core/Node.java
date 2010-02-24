@@ -123,7 +123,6 @@ public class Node {
     }
   }
   
-  // TODO: doc
   protected void indexLeaves() {
     this.indexLeavesFrom(0);
   }
