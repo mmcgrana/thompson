@@ -24,6 +24,9 @@
     "(x_3^-2)(x_4^-1)"               false
     "(x_1^2)(x_2^1)(x_3^-2)(x_4^-1)" false))
 
-(deftest test-word-length
-  )
-; TODO: finish
+(deftest test-invert
+  (is (= (BaseExponent/fromString "(x_4^1)(x_3^-2)(x_0^-5)")
+         (.invert (BaseExponent/fromString "(x_0^5)(x_3^2)(x_4^-1)")))))
+
+; TODO: toNormalForm / isNormalForm random element test
+; TODO: toUniqueNormalForm / isUniqueNormalForm?

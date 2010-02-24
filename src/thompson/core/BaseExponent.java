@@ -25,21 +25,6 @@ public class BaseExponent {
     return this.bases.length;
   }
 
-  private static int[] toIntArray(ArrayList<Integer> ints) {
-    int[] array = new int[ints.size()];
-    for (int i = 0; i < ints.size(); i++) {
-      array[i] = ints.get(i);
-    }
-    return array;
-  }
-  
-  private static int[] intArrayCopy(int [] ints) {
-    int size = ints.length;
-    int[] copies = new int[size];
-    System.arraycopy(ints, 0, copies, 0, size);
-    return copies;
-  }
-
   private static String checkNext(Parser parser, Pattern pattern, String expected) {
     String str;
     if ((str = parser.next(pattern)) == null) {
@@ -67,7 +52,8 @@ public class BaseExponent {
         exponents.add(Integer.valueOf(exponentStr));
       }
     }
-    return new BaseExponent(toIntArray(bases), toIntArray(exponents));
+    return new BaseExponent(Util.toIntArray(bases),
+                            Util.toIntArray(exponents));
   }
 
   public String toString() {
@@ -79,11 +65,21 @@ public class BaseExponent {
     }
     return buf.toString();
   }
+  
+  public boolean equals(Object obj) {
+    if (!(obj instanceof BaseExponent)) {
+      return false;
+    } else {
+      BaseExponent be = (BaseExponent) obj;
+      return (Arrays.equals(this.bases, be.bases) &&
+              Arrays.equals(this.exponents, be.exponents));
+    }
+  }
 
   public BaseExponent toNormalForm() {
     int origSize = this.numTerms();
-    int[] bases = intArrayCopy(this.bases);
-    int[] exponents = intArrayCopy(this.exponents);
+    int[] bases = Arrays.copyOf(this.bases, this.bases.length);
+    int[] exponents = Arrays.copyOf(this.exponents, this.exponents.length);
 
     // shuffle
     int leftDone = 0;
@@ -207,6 +203,16 @@ public class BaseExponent {
     return TreePair.product(factors);
   }
   
+  public BaseExponent invert() {
+    int[] bases = new int[this.numTerms()];
+    int[] exponents = new int[this.numTerms()];
+    for (int i = 0; i < this.numTerms(); i++) {
+      bases[this.numTerms() - i - 1] = this.bases[i];
+      exponents[this.numTerms() - i - 1] = -this.exponents[i];
+    }
+    return new BaseExponent(bases, exponents);
+  }
+
   // Returns fg in normal form
   public static BaseExponent multiply(BaseExponent f, BaseExponent g) {
     BaseExponent[] factors = {f, g};

@@ -20,6 +20,16 @@ public class TreePair {
   public String toString() {
     return "[" + minusRoot.toString() + "|" + plusRoot.toString() + "]"; 
   }
+  
+  public boolean equals(Object obj) {
+    if (!(obj instanceof TreePair)) {
+      return false;
+    } else {
+      TreePair treePair = (TreePair) obj;
+      return (this.minusRoot.equals(treePair.minusRoot) &&
+              this.plusRoot.equals(treePair.plusRoot));
+    }
+  }
 
   public BaseExponent toNormalForm() {
     // size the product
@@ -87,10 +97,12 @@ public class TreePair {
   }
 
   public static TreePair fromTerm(int base, int exponent) {
-    if ((exponent == 0) || (base < 0)) {
+    if (base < 0) {
       throw new IllegalArgumentException();
     }
-    if (exponent < 0) {
+    if (exponent == 0) {
+      return new TreePair(new Node(), new Node());
+    } else if (exponent < 0) {
       return new TreePair(fromTermBent(base, -exponent),
                           fromTermStraight(base, -exponent));
     } else {
@@ -167,6 +179,10 @@ public class TreePair {
     unifyFrom(plus, plusComplements, minus, minusComplements);
   }
   
+  public TreePair invert() {
+    return new TreePair(this.plusRoot, this.minusRoot);
+  }
+
   // Returns fg
   public static TreePair multiply(TreePair f, TreePair g) {
     TreePair fCopy = f.copy();

@@ -34,6 +34,20 @@ public class Node {
   public String toString() {
     return this.isLeaf() ? "*" : ("(" + left.toString() + right.toString() + ")");
   }
+  
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Node)) {
+      return false;
+    } else {
+      Node node = (Node) obj;
+      if (this.isLeaf()) {
+        return node.isLeaf();
+      } else {
+        return (this.left.equals(node.left) &&
+                this.right.equals(node.right));
+      }
+    }
+  }
 
   public boolean isRoot() {
     return parent == null;
