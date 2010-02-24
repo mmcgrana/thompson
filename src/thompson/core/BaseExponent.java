@@ -96,7 +96,7 @@ public class BaseExponent {
         int exponent = exponents[i];
         int base = bases[i];
         if ((exponent > 0) &&
-            ((shufPosBase == -1) || (base < shufPosBase))) {
+            ((shufPosI == -1) || (base < shufPosBase))) {
           shufPosBase = base;
           shufPosI = i;
         }
@@ -107,7 +107,7 @@ public class BaseExponent {
         int exponent = exponents[i];
         int base = bases[i];
         if ((exponent < 0) &&
-            ((shufNegBase == -1) || (base < shufNegBase))) {
+            ((shufNegI == -1) || (base < shufNegBase))) {
           shufNegBase = base;
           shufNegI = i;
         }
@@ -223,8 +223,8 @@ public class BaseExponent {
     int[] exponents = new int[totalTerms];
     int i = 0;
     for (BaseExponent factor : factors) {
-      System.arraycopy(factor.bases, 0, bases, i, factor.numTerms());
-      System.arraycopy(factor.bases, 0, bases, i, factor.numTerms());
+      System.arraycopy(factor.bases,     0, bases,     i, factor.numTerms());
+      System.arraycopy(factor.exponents, 0, exponents, i, factor.numTerms());
       i += factor.numTerms();
     }
     return new BaseExponent(bases, exponents).toNormalForm();
