@@ -13,7 +13,7 @@
   (map #(BaseExponent/fromString %) (str/re-split #"\s+" input)))
 
 (defn unparse-elems [elems]
-  (str/str-join "\n" (map #(.toString %) elems)))
+  (str/str-join "\n" (map str elems)))
 
 (defn relator-normalize [elems]
   (map #(.toNormalForm #^BaseExponent %) elems))
@@ -38,7 +38,7 @@
   (map #(.wordLength (.toTreePair #^BaseExponent %)) elems))
 
 (defn trees [elems]
-  (map #(.toString (.toTreePair #^BaseExponent %)) elems))
+  (map #(str (.toTreePair #^BaseExponent %)) elems))
 
 (def operation-fns
   {"relator normalize" relator-normalize
@@ -89,7 +89,11 @@
       (text-area "output" output
         {:rows 10 :cols 140 :spellcheck false}) [:br]
       [:br]
-      (link "about" "/about"))))
+      (link "help" "/help") " " (link "about" "/about"))))
+
+(defn help-view []
+  (layout-view "help"
+    [:p "TODO: write help docs"]))
 
 (defn about-view []
   (layout-view "about"
@@ -114,6 +118,8 @@
             operation (get (:params req) "compute")
             output    (compute operation input)]
         (respond (compute-view input output)))
+    [:get "/help"]
+      (respond (help-view))
     [:get "/about"]
       (respond (about-view))
     (respond (not-found-view) {:status 404})))
