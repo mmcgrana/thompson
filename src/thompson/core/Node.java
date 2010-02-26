@@ -88,7 +88,7 @@ public class Node {
   
   // OPTIMIZE: precompute
   public int exponent() {
-    if (this.isRightChild() || this.parent.isRightEdge()) {
+    if (this.isRoot() || this.isRightChild() || this.parent.isRightEdge()) {
       return 0;
     } else {
       return this.parent.exponent() + 1;
@@ -117,6 +117,9 @@ public class Node {
   private void addLeaves(ArrayList<Node> leaves, Node node) {
     if (node.isLeaf()) {
       leaves.add(node);
+      // if (!node.isRoot()) {
+      //   leaves.add(node);
+      // }
     } else {
       addLeaves(leaves, node.left);
       addLeaves(leaves, node.right);

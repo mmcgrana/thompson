@@ -1,5 +1,6 @@
 (ns thompson.core.base-exponent-test
-  (:use clojure.test)
+  (:use clojure.test
+        thompson.core.test-util)
   (:import thompson.core.BaseExponent))
 
 (deftest test-to-from-string
@@ -11,6 +12,8 @@
 (deftest test-to-normal-form
   (are [gf nf] (= nf (.toString (.toNormalForm (BaseExponent/fromString gf))))
     "(x_1^2)"                                  "(x_1^2)"
+    "(x_0^2)(x_0^-2)"                          ""
+    "(x_0^-2)(x_1^1)"                          "(x_3^1)(x_0^-2)"
     "(x_0^2)(x_1^4)"                           "(x_0^2)(x_1^4)"
     "(x_0^1)(x_1^-1)"                          "(x_0^1)(x_1^-1)"
     "(x_0^-2)(x_1^-2)(x_0^-1)(x_1^-1)(x_0^-2)" "(x_6^-1)(x_3^-2)(x_0^-5)"))
@@ -24,9 +27,28 @@
     "(x_3^-2)(x_4^-1)"               false
     "(x_1^2)(x_2^1)(x_3^-2)(x_4^-1)" false))
 
+(deftest test-normal-form-fuzz
+  (doseq [l [1 2 4 8 16]]
+    (dotimes [_ 100]
+      (let [f (rand-factor l 10 10)]
+        (is (.isNormalForm (.toNormalForm f)))))))
+
+(deftest test-to-unique-normal-form
+  (are [normal unique]
+    (= unique
+       (.toString (.toUniqueNormalForm
+                    (.toNormalForm (BaseExponent/fromString normal)))))
+    "(x_1^2)(x_4^-3)(x_1^-5)"                 "(x_2^-3)(x_1^-3)"
+    "(x_74^41)(x_117^-24)(x_74^-12)(x_9^-45)" "(x_74^29)(x_105^-24)(x_9^-45)"))
+
+(deftest test-is-unique-normal-form
+  (are [f unique] (= unique (.isUniqueNormalForm (BaseExponent/fromString f)))
+    "(x_1^2)(x_4^-3)(x_1^-5)"                 false
+    "(x_2^-3)(x_1^-3)"                        true
+    "(x_74^41)(x_117^-24)(x_74^-12)(x_9^-45)" false
+    "(x_74^29)(x_105^-24)(x_9^-45)"           true
+    "(x_3^1)(x_4^-2)(x_3^-4)"                 true))
+
 (deftest test-invert
   (is (= (BaseExponent/fromString "(x_4^1)(x_3^-2)(x_0^-5)")
          (.invert (BaseExponent/fromString "(x_0^5)(x_3^2)(x_4^-1)")))))
-
-; TODO: toNormalForm / isNormalForm random element test
-; TODO: toUniqueNormalForm / isUniqueNormalForm?
