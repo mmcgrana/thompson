@@ -34,10 +34,18 @@
    "word length" word-length})
 
 (defn- compute [operation input]
-  (let [in-elems     (parse-elems input)
-        operation-fn (operation-fns operation)
-        out-elems    (operation-fn in-elems)]
-    (unparse-elems out-elems)))
+  (try
+    (let [in-elems     (parse-elems input)
+          operation-fn (operation-fns operation)
+          out-elems    (operation-fn in-elems)]
+      (unparse-elems out-elems))
+    (catch Exception e
+      (let [m (.getMessage e)]
+        (if (and m (re-find #"expected" m))
+          (str/str-join "\n"
+            ["input error:"
+             (re-find #"expected.*" m)])
+          (throw e))))))
 
 (defn- not-found-view []
   (html

@@ -28,7 +28,7 @@ public class BaseExponent {
   private static String checkNext(Parser parser, Pattern pattern, String expected) {
     String str;
     if ((str = parser.next(pattern)) == null) {
-      throw new IllegalArgumentException("expected " + expected + ", got '" + parser.rest() + "'");
+      throw new IllegalArgumentException("expected " + expected + " next, but rest of input is '" + parser.rest() + "'");
     }
     return str;
   }
