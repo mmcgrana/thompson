@@ -15,40 +15,23 @@
 (defn unparse-elems [elems]
   (str/str-join "\n" (map str elems)))
 
-(defn relator-normalize [elems]
+(defn normalize [elems]
   (map #(.toNormalForm #^BaseExponent %) elems))
 
-(defn tree-normalize [elems]
-  (map #(.toNormalForm (.toTreePair #^BaseExponent %)) elems))
-
-(defn relator-invert [elems]
+(defn invert [elems]
   (map #(.invert #^BaseExponent %) elems))
 
-(defn tree-invert [elems]
-  (map #(.toNormalForm (.invert (.toTreePair #^BaseExponent %))) elems))
-
-(defn relator-product [elems]
+(defn product [elems]
   (list (BaseExponent/product (into-array elems))))
-
-(defn tree-product [elems]
-  (list (.toNormalForm (TreePair/product
-          (into-array (map #(.toTreePair #^BaseExponent %) elems))))))
 
 (defn word-length [elems]
   (map #(.wordLength (.toTreePair #^BaseExponent %)) elems))
 
-(defn trees [elems]
-  (map #(str (.toTreePair #^BaseExponent %)) elems))
-
 (def operation-fns
-  {"relator normalize" relator-normalize
-   "tree normalize"    tree-normalize
-   "relator invert"    relator-invert
-   "tree invert"       tree-invert
-   "relator product"   relator-product
-   "tree product"      tree-product
-   "word length"       word-length
-   "trees"             trees})
+  {"normalize"   normalize
+   "invert"      invert
+   "product"     product
+   "word length" word-length})
 
 (defn compute [operation input]
   (let [in-elems     (parse-elems input)
@@ -80,10 +63,7 @@
         (text-area "input" input
           {:rows 10 :cols 140 :spellcheck false}) [:br]
         (multi-submit "compute"
-          `("relator normalize" "tree normalize"
-            "relator invert"    "tree invert"
-            "relator product"   "tree product"
-            "word length"       "trees")))
+          `("normalize" "invert" "product" "word length")))
       [:br] [:br]
       "Output:" [:br]
       (text-area "output" output
@@ -93,16 +73,30 @@
 
 (defn help-view []
   (layout-view "help"
-    [:p "TODO: write help docs"]))
+    [:p "Enter one element from Thompson's group F on each line of the input
+         box. Elements must in the form (x_i^a)(x_j^b)(x_k^c) etc."]
+    [:p "Then select one of the available operations:"]
+    [:p [:code "normalize"]
+        ": Find the unique normal form for each given element."]
+    [:p [:code "invert"]
+        ": Find the inverse for each given element."]
+    [:p [:code "product"]
+        ": Compute the product of the given elements and show the result in
+         unique normal form."]
+    [:p [:code "word length"]
+        ": Calculate the word length for each given element with respect  to the
+        {x_0, x_1} generating set."]))
 
 (defn about-view []
   (layout-view "about"
-    [:p "A web interface to " [:code "thompson"] ", a JVM library for
+    [:p "This is the web interface to " [:code "thompson"] ", a JVM library for
          computational algebra in " (link "Thompson's group F"
          "http://en.wikipedia.org/wiki/Thompson_groups") "."]
-    [:p "Source code is available on "
-        (link "GitHub" "http://github.com/mmcgrana/thompson")
-        " under an MIT license."]))
+    [:p "Please send comments, questions, and bug reports to "
+         (link "Mark McGranaghan" "http://markmcgranaghan.com") " at "
+         (link "mmcgrana@gmail.com" "mailto:mmcgrana@gmail.com")]
+    [:p "The source code for this application is available on "
+        (link "GitHub" "http://github.com/mmcgrana/thompson") "."]))
 
 (defn respond [body & [opts]]
   {:status  (:status opts 200)
