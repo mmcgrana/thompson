@@ -25,10 +25,3 @@
     (is (= 200 (:status resp)))))
 
 (deftest test-input-error-handling)
-
-
-"(x_2^-3)(x_1^2)\r\n(x_1^)(x_1^-1)"
-#input error on line 2:
-input error:
-expected '^', got ')', rest of input is ')(x_1^-1)'
-
