@@ -31,7 +31,7 @@ public class TreePair {
     }
   }
 
-  public BaseExponent toNormalForm() {
+  public GenExp toNormalForm() {
     // size the product
     int numTerms = 0;
     for (Node leaf : this.plusRoot.leaves()) {
@@ -40,8 +40,8 @@ public class TreePair {
     for (Node leaf : this.minusRoot.leaves()) {
       if (leaf.exponent() > 0 ) { numTerms++; }
     }
-    int[] bases = new int[numTerms];
-    int[] exponents = new int[numTerms];
+    int[] gens = new int[numTerms];
+    int[] exps = new int[numTerms];
     
     // fill the product
     int i = 0;
@@ -50,8 +50,8 @@ public class TreePair {
     for (int index = 0; index < numLeaves; index++) {
       int exponent = leaves.get(index).exponent();
       if (exponent > 0) {
-        bases[i] = index;
-        exponents[i] = exponent;
+        gens[i] = index;
+        exps[i] = exponent;
         i++;
       }
     }
@@ -59,12 +59,12 @@ public class TreePair {
     for (int index = numLeaves - 1; index >= 0; index--) {
       int exponent = leaves.get(index).exponent();
       if (exponent > 0) {
-        bases[i] = index;
-        exponents[i] = -exponent;
+        gens[i] = index;
+        exps[i] = -exponent;
         i++;
       }
     }
-    return new BaseExponent(bases, exponents);
+    return new GenExp(gens, exps);
   }
 
   private static Node fromTermStraight(int base, int exponent) {

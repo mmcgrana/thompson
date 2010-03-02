@@ -1,5 +1,5 @@
 (ns thompson.core.test-util
-  (:import thompson.core.BaseExponent))
+  (:import thompson.core.GenExp))
 
 (defn- nrandom [n f]
   (take n (repeatedly f)))
@@ -9,4 +9,4 @@
         exponents (take num-terms
                     (remove zero?
                       (repeatedly #(- (rand-int (* 2 max-exponent)) max-exponent))))]
-    (BaseExponent. (int-array bases) (int-array exponents))))
+    (GenExp. (int-array bases) (int-array exponents))))

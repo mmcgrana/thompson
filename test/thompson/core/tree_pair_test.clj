@@ -1,7 +1,7 @@
 (ns thompson.core.tree-pair-test
   (:use clojure.test
         thompson.core.test-util)
-  (:import (thompson.core TreePair BaseExponent)))
+  (:import (thompson.core TreePair GenExp)))
 
 (deftest test-from-term
   (are [b e s] (= s (.toString (TreePair/fromTerm b e)))
@@ -16,11 +16,11 @@
 
 (deftest test-word-length
   (let [elem "(x_1^1)(x_3^1)(x_5^-1)(x_4^-2)(x_0^-1)"]
-    (is (= 12 (.wordLength (.toTreePair (BaseExponent/fromString elem)))))))
+    (is (= 12 (.wordLength (.toTreePair (GenExp/fromString elem)))))))
 
 (deftest test-invert
-  (is (= (.toTreePair (BaseExponent/fromString "(x_4^1)(x_3^-2)(x_0^-5)"))
-         (.invert (.toTreePair (BaseExponent/fromString "(x_0^5)(x_3^2)(x_4^-1)"))))))
+  (is (= (.toTreePair (GenExp/fromString "(x_4^1)(x_3^-2)(x_0^-5)"))
+         (.invert (.toTreePair (GenExp/fromString "(x_0^5)(x_3^2)(x_4^-1)"))))))
 
 (deftest test-word-length-inverse-fuzz
   (doseq [l [1 2 4 8 16]]

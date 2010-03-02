@@ -1,8 +1,7 @@
 (ns thompson.web.dev-server
   (:use ring.adapter.jetty
         (ring.middleware reload stacktrace)
-        (thompson.web handler bounce-favicon)
-        (clojure.contrib [def :only (defvar-)])))
+        (thompson.web handler bounce-favicon)))
 
 (def dev-app
   (-> #'handle-thompson

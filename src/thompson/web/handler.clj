@@ -4,28 +4,28 @@
         ring.handler.dump
         ring.middleware.params)
   (:require (clojure.contrib [str-utils :as str]))
-  (:import (thompson.core BaseExponent TreePair)))
+  (:import (thompson.core GenExp TreePair)))
 
 (defvar- sample-input
   "(x_2^-3)(x_1^2)\n(x_1^-4)(x_1^-1)")
 
 (defn- parse-elems [input]
-  (map #(BaseExponent/fromString %) (str/re-split #"\s+" input)))
+  (map #(GenExp/fromString %) (str/re-split #"\s+" input)))
 
 (defn- unparse-elems [elems]
   (str/str-join "\n" (map str elems)))
 
 (defn- normalize [elems]
-  (map #(.toNormalForm #^BaseExponent %) elems))
+  (map #(.toNormalForm #^GenExp %) elems))
 
 (defn- invert [elems]
-  (map #(.invert #^BaseExponent %) elems))
+  (map #(.invert #^GenExp %) elems))
 
 (defn- product [elems]
-  (list (BaseExponent/product (into-array elems))))
+  (list (GenExp/product (into-array elems))))
 
 (defn- word-length [elems]
-  (map #(.wordLength (.toTreePair #^BaseExponent %)) elems))
+  (map #(.wordLength (.toTreePair #^GenExp %)) elems))
 
 (defvar- operation-fns
   {"normalize"   normalize
