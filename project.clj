@@ -14,4 +14,4 @@
                      [lein-javac "0.0.2-SNAPSHOT"]]
   :namespaces [thompson.web.handler
                thompson.web.bounce-favicon
-               thompson.web.prod-serve])
+               thompson.web.prod-server])
