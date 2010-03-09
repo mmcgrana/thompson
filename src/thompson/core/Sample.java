@@ -144,9 +144,9 @@ public class Sample {
     return WEIGHTS[labelA][labelB];
   }
     
-  private static ArrayList<ForestKey> weightNKeys(HashMap<ForestKey,?> countWeb, int n) {
+  private static ArrayList<ForestKey> weightNKeys(HashMap<ForestKey,?> web, int n) {
     ArrayList<ForestKey> keys = new ArrayList<ForestKey>();
-    for (ForestKey key : countWeb.keySet()) {
+    for (ForestKey key : web.keySet()) {
       if (key.weight == n) {
         keys.add(key);
       }
@@ -177,7 +177,7 @@ public class Sample {
     return toKeys;
   }
 
-  public static int[] numForestDiagrams(int maxWeight) {
+  public static int[] countForestDiagrams(int maxWeight) {
     HashMap<ForestKey,Integer> countWeb = new HashMap<ForestKey,Integer>();
     countWeb.put(
       new ForestKey(2, new ForestState(ForestLabel.L, true, 0),
@@ -201,5 +201,84 @@ public class Sample {
                                              new ForestState(ForestLabel.R, false, 0)));
     }
     return counts;
+  }
+  
+  static class BackPointer {
+    private ForestKey backKey;
+    private int backCount;
+    
+    BackPointer(ForestKey backKey, int backCount) {
+      this.backKey = backKey;
+      this.backCount = backCount;
+    }
+  }
+  
+  static class BackPointers {
+    private ArrayList<BackPointer> backPointers;
+    private int totalBackCount;
+    
+    BackPointers(int totalBackCount) {
+      this.backPointers = new ArrayList<BackPointer>();
+      this.totalBackCount = totalBackCount;
+    }
+  }
+  
+  private static void addBackPointer(BackPointers backPointers, ForestKey backKey, int backCount) {
+    backPointers.backPointers.add(new BackPointer(backKey, backCount));
+    backPointers.totalBackCount += backCount;
+  }
+  
+  public static HashMap<ForestKey,BackPointers> modelForestDiagrams(int maxWeight) {
+    HashMap<ForestKey,BackPointers> modelWeb = new HashMap<ForestKey,BackPointers>();
+    modelWeb.put(
+      new ForestKey(2, new ForestState(ForestLabel.L, true, 0),
+                       new ForestState(ForestLabel.L, true, 0)),
+      new BackPointers(1));
+    for (int n = 2; n < maxWeight; n++) {
+      for (ForestKey fromKey : weightNKeys(modelWeb, n)) {
+        BackPointers fromPointers = modelWeb.get(fromKey);
+        int fromCount = fromPointers.totalBackCount;
+        for (ForestKey toKey : successorKeys(fromKey)) {
+          BackPointers toPointers = modelWeb.get(toKey);
+          if (toPointers == null) { toPointers = new BackPointers(0); }
+          addBackPointer(toPointers, fromKey, fromCount);
+          modelWeb.put(toKey, toPointers);
+        }
+      }
+    }
+    return modelWeb;
+  }
+  
+  private static ForestKey chooseBackKey(BackPointers backPointers, Random rand) {
+    BackPointer chosen = null;
+    int finger = rand.nextInt(backPointers.totalBackCount);
+    int at = 0;
+    for (BackPointer backPointer : backPointers.backPointers) {
+      at += backPointer.backCount;
+      if (at > finger) {
+        chosen = backPointer;
+        break;
+      }
+    }
+    if (chosen == null) { throw new RuntimeException("unreachable"); }
+    return chosen.backKey;
+  }
+  
+  public static LinkedList<ForestKey> chooseRandomWord(HashMap<ForestKey, BackPointers> modelWeb, int weight) {
+    ForestKey atKey = new ForestKey(weight, new ForestState(ForestLabel.R, false, 0),
+                                            new ForestState(ForestLabel.R, false, 0));
+    if (atKey == null) {
+      throw new IllegalArgumentException("Insufficiently deep model");
+    }
+    ForestKey rootKey = new ForestKey(2, new ForestState(ForestLabel.L, true, 0),
+                                         new ForestState(ForestLabel.L, true, 0));
+    Random rand = new Random();
+    LinkedList<ForestKey> wordKeys = new LinkedList<ForestKey>();
+    while (!atKey.equals(rootKey)) {
+      wordKeys.addFirst(atKey);
+      atKey = chooseBackKey(modelWeb.get(atKey), rand);
+    }
+    wordKeys.addFirst(rootKey);
+    return wordKeys;  
   }
 }
