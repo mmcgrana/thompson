@@ -2,7 +2,7 @@ package thompson.core;
 
 import java.util.*;
 
-public class WordSample {
+public class Sample {
   static class ForestLabel {
     static final int I = 0;
     static final int N = 1;
@@ -43,11 +43,11 @@ public class WordSample {
     }
   }
 
-  static class TableElem {
+  static class ForestKey {
     int weight;
     ForestState upperState, lowerState;
     
-    TableElem(int weight, ForestState upperState, ForestState lowerState) {
+    ForestKey(int weight, ForestState upperState, ForestState lowerState) {
       this.weight = weight;
       this.upperState = upperState;
       this.lowerState = lowerState;
@@ -59,10 +59,10 @@ public class WordSample {
     }
     
     public boolean equals(Object obj) {
-      if (!(obj instanceof TableElem)) {
+      if (!(obj instanceof ForestKey)) {
         return false;
       } else {
-        TableElem elem = (TableElem) obj;
+        ForestKey elem = (ForestKey) obj;
         return ((this.weight == elem.weight) &&
                 this.upperState.equals(elem.upperState) &&
                 this.lowerState.equals(elem.lowerState));
@@ -144,49 +144,61 @@ public class WordSample {
     return WEIGHTS[labelA][labelB];
   }
     
+  private static ArrayList<ForestKey> weightNKeys(HashMap<ForestKey,?> countWeb, int n) {
+    ArrayList<ForestKey> keys = new ArrayList<ForestKey>();
+    for (ForestKey key : countWeb.keySet()) {
+      if (key.weight == n) {
+        keys.add(key);
+      }
+    }
+    return keys;
+  }
+  
+  public static ArrayList<ForestKey> successorKeys(ForestKey fromKey) {
+    ArrayList<ForestKey> toKeys = new ArrayList<ForestKey>();
+    ForestState upperState = fromKey.upperState;
+    ForestState lowerState = fromKey.lowerState;
+    ForestState[] upperSet = upperState.leftOfPointer ? updateLeft(upperState) : updateRight(upperState);
+    ForestState[] lowerSet = lowerState.leftOfPointer ? updateLeft(lowerState) : updateRight(lowerState);
+    for (int u = 0; u < upperSet.length; u++) {
+      ForestState upperStateP = upperSet[u];
+      for (int l = 0; l < lowerSet.length; l++) {
+        ForestState lowerStateP = lowerSet[l];
+        if (!((upperStateP.forestLabel == lowerStateP.forestLabel) &&
+              (lowerStateP.forestLabel == ForestLabel.I) &&
+              (upperState.forestLabel != ForestLabel.I) &&
+              (lowerState.forestLabel != ForestLabel.I))) {
+          int weightP = weight(upperStateP.forestLabel, lowerStateP.forestLabel);
+          ForestKey toKey = new ForestKey(fromKey.weight + weightP, upperStateP, lowerStateP); 
+          toKeys.add(toKey);
+        }
+      }
+    }
+    return toKeys;
+  }
+
   public static int[] numForestDiagrams(int maxWeight) {
-    int[] counts = new int[maxWeight - 3];
-    HashMap<TableElem,Integer> totals = new HashMap<TableElem,Integer>();
-    totals.put(
-      new TableElem(2, new ForestState(ForestLabel.L, true, 0),
+    HashMap<ForestKey,Integer> countWeb = new HashMap<ForestKey,Integer>();
+    countWeb.put(
+      new ForestKey(2, new ForestState(ForestLabel.L, true, 0),
                        new ForestState(ForestLabel.L, true, 0)),
       1);
     for (int n = 2; n < maxWeight; n++) {
-      TableElem[] iterElems = totals.keySet().toArray(new TableElem[0]);
-      for (TableElem tableElem : iterElems) {
-        if (tableElem.weight == n) {
-          if (totals.get(tableElem) != 0) {
-            ForestState upperState = tableElem.upperState;
-            ForestState lowerState = tableElem.lowerState;
-            ForestState[] upperSet = upperState.leftOfPointer ? updateLeft(upperState) : updateRight(upperState);
-            ForestState[] lowerSet = lowerState.leftOfPointer ? updateLeft(lowerState) : updateRight(lowerState);
-            for (int u = 0; u < upperSet.length; u++) {
-              ForestState upperStateP = upperSet[u];
-              for (int l = 0; l < lowerSet.length; l++) {
-                ForestState lowerStateP = lowerSet[l];
-                if (!((upperStateP.forestLabel == lowerStateP.forestLabel) &&
-                      (lowerStateP.forestLabel == ForestLabel.I) &&
-                      (upperState.forestLabel != ForestLabel.I) &&
-                      (lowerState.forestLabel != ForestLabel.I))) {
-                  int weightP = weight(upperStateP.forestLabel, lowerStateP.forestLabel);
-                  TableElem updateElem = new TableElem(n + weightP, upperStateP, lowerStateP);
-                  Integer updateTotal = totals.get(updateElem);
-                  Integer increment = totals.get(new TableElem(n, upperState, lowerState));
-                  if (updateTotal == null) { updateTotal = 0; }
-                  if (increment == null) { increment = 0; }
-                  Integer newTotal = updateTotal + increment;
-                  totals.put(updateElem, newTotal);
-                }
-              }
-            }
-          }
+      for (ForestKey fromKey : weightNKeys(countWeb, n)) {
+        Integer fromCount = countWeb.get(fromKey);
+        for (ForestKey toKey : successorKeys(fromKey)) {
+          Integer toCount = countWeb.get(toKey);
+          if (toCount == null) { toCount = 0; }
+          Integer newCount = toCount + fromCount;
+          countWeb.put(toKey, newCount);
         }
       }
-      if (n >= 3) {
-        counts[n-3] = totals.get(new TableElem(n+1,
-                                               new ForestState(ForestLabel.R, false, 0),
-                                               new ForestState(ForestLabel.R, false, 0)));
-      }
+    }
+    int[] counts = new int[maxWeight-3];
+    for (int i = 0; i < maxWeight-3; i++) {
+      counts[i] = countWeb.get(new ForestKey(i+4,
+                                             new ForestState(ForestLabel.R, false, 0),
+                                             new ForestState(ForestLabel.R, false, 0)));
     }
     return counts;
   }
