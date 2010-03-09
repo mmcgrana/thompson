@@ -215,24 +215,24 @@ public class Sample {
     return toKeys;
   }
 
-  public static int[] countForestDiagrams(int maxWeight) {
-    HashMap<ForestKey,Integer> countWeb = new HashMap<ForestKey,Integer>();
+  public static long[] countForestDiagrams(int maxWeight) {
+    HashMap<ForestKey,Long> countWeb = new HashMap<ForestKey,Long>();
     countWeb.put(
       new ForestKey(2, new ForestState(ForestLabel.L, OfPointer.LEFT, 0),
                        new ForestState(ForestLabel.L, OfPointer.LEFT, 0)),
-      1);
+      1L);
     for (int n = 2; n < maxWeight; n++) {
       for (ForestKey fromKey : weightNKeys(countWeb, n)) {
-        Integer fromCount = countWeb.get(fromKey);
+        Long fromCount = countWeb.get(fromKey);
         for (ForestKey toKey : successorKeys(fromKey)) {
-          Integer toCount = countWeb.get(toKey);
-          if (toCount == null) { toCount = 0; }
-          Integer newCount = toCount + fromCount;
+          Long toCount = countWeb.get(toKey);
+          if (toCount == null) { toCount = 0L; }
+          Long newCount = toCount + fromCount;
           countWeb.put(toKey, newCount);
         }
       }
     }
-    int[] counts = new int[maxWeight-3];
+    long[] counts = new long[maxWeight-3];
     for (int i = 0; i < maxWeight-3; i++) {
       counts[i] = countWeb.get(new ForestKey(i+4,
                                              new ForestState(ForestLabel.R, OfPointer.RIGHT, 0),
@@ -243,9 +243,9 @@ public class Sample {
   
   static class BackPointer {
     private ForestKey backKey;
-    private int backCount;
+    private long backCount;
     
-    BackPointer(ForestKey backKey, int backCount) {
+    BackPointer(ForestKey backKey, long backCount) {
       this.backKey = backKey;
       this.backCount = backCount;
     }
@@ -253,15 +253,15 @@ public class Sample {
   
   static class BackPointers {
     private ArrayList<BackPointer> backPointers;
-    private int totalBackCount;
+    private long totalBackCount;
     
-    BackPointers(int totalBackCount) {
+    BackPointers(long totalBackCount) {
       this.backPointers = new ArrayList<BackPointer>();
       this.totalBackCount = totalBackCount;
     }
   }
   
-  private static void addBackPointer(BackPointers backPointers, ForestKey backKey, int backCount) {
+  private static void addBackPointer(BackPointers backPointers, ForestKey backKey, long backCount) {
     backPointers.backPointers.add(new BackPointer(backKey, backCount));
     backPointers.totalBackCount += backCount;
   }
@@ -271,14 +271,14 @@ public class Sample {
     modelWeb.put(
       new ForestKey(2, new ForestState(ForestLabel.L, OfPointer.LEFT, 0),
                        new ForestState(ForestLabel.L, OfPointer.LEFT, 0)),
-      new BackPointers(1));
+      new BackPointers(1L));
     for (int n = 2; n < maxWeight; n++) {
       for (ForestKey fromKey : weightNKeys(modelWeb, n)) {
         BackPointers fromPointers = modelWeb.get(fromKey);
-        int fromCount = fromPointers.totalBackCount;
+        long fromCount = fromPointers.totalBackCount;
         for (ForestKey toKey : successorKeys(fromKey)) {
           BackPointers toPointers = modelWeb.get(toKey);
-          if (toPointers == null) { toPointers = new BackPointers(0); }
+          if (toPointers == null) { toPointers = new BackPointers(0L); }
           addBackPointer(toPointers, fromKey, fromCount);
           modelWeb.put(toKey, toPointers);
         }
@@ -289,8 +289,8 @@ public class Sample {
   
   private static ForestKey chooseBackKey(BackPointers backPointers, Random rand) {
     BackPointer chosen = null;
-    int finger = rand.nextInt(backPointers.totalBackCount);
-    int at = 0;
+    long finger = (long) (backPointers.totalBackCount * rand.nextDouble());
+    long at = 0;
     for (BackPointer backPointer : backPointers.backPointers) {
       at += backPointer.backCount;
       if (at > finger) {
