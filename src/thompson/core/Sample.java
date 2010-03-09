@@ -3,28 +3,29 @@ package thompson.core;
 import java.util.*;
 
 public class Sample {
-  static class ForestLabel {
-    static final int I = 0;
-    static final int N = 1;
-    static final int L = 2;
-    static final int R = 3;
-    static final int X = 4;
+  enum ForestLabel {
+    I, N, L, R, X
+  }
+
+  enum OfPointer {
+    LEFT, RIGHT
   }
 
   static class ForestState {
-    private int forestLabel;
-    private boolean leftOfPointer;
+    private ForestLabel forestLabel;
+    private OfPointer ofPointer;
     private int excess;
     
-    ForestState(int forestLabel, boolean leftOfPointer, int excess) {
+    ForestState(ForestLabel forestLabel, OfPointer ofPointer, int excess) {
       this.forestLabel = forestLabel;
-      this.leftOfPointer = leftOfPointer;
+      this.ofPointer = ofPointer;
       this.excess = excess;
     }
     
     public int hashCode() {
-      return Util.hashCombine(this.forestLabel, this.excess) +
-             (this.leftOfPointer ? 0 : 1);
+      return Util.hashCombine(this.forestLabel.hashCode(),
+               Util.hashCombine(this.ofPointer.hashCode(),
+                                this.excess));
     }
     
     public boolean equals(Object obj) {
@@ -33,13 +34,13 @@ public class Sample {
       } else {
         ForestState state = (ForestState) obj;
         return ((this.forestLabel == state.forestLabel) &&
-                (this.leftOfPointer == state.leftOfPointer) &&
+                (this.ofPointer == state.ofPointer) &&
                 (this.excess == state.excess));
       }
     }
     
     public String toString() {
-      return "{" + forestLabel + ", " + leftOfPointer + ", " + excess + "}";
+      return "{" + forestLabel + ", " + ofPointer + ", " + excess + "}";
     }
   }
 
@@ -80,25 +81,25 @@ public class Sample {
     ForestState[] nextStates;
     if (state.forestLabel == ForestLabel.L) {
       nextStates = new ForestState[7];
-      nextStates[0] = new ForestState(ForestLabel.L, true,  0);
-      nextStates[1] = new ForestState(ForestLabel.N, true,  1);
-      nextStates[2] = new ForestState(ForestLabel.I, true,  0);
-      nextStates[3] = new ForestState(ForestLabel.N, false, 1);
-      nextStates[4] = new ForestState(ForestLabel.I, false, 0);
-      nextStates[5] = new ForestState(ForestLabel.R, false, 0);
-      nextStates[6] = new ForestState(ForestLabel.X, false, 0);
+      nextStates[0] = new ForestState(ForestLabel.L, OfPointer.LEFT,  0);
+      nextStates[1] = new ForestState(ForestLabel.N, OfPointer.LEFT,  1);
+      nextStates[2] = new ForestState(ForestLabel.I, OfPointer.LEFT,  0);
+      nextStates[3] = new ForestState(ForestLabel.N, OfPointer.RIGHT, 1);
+      nextStates[4] = new ForestState(ForestLabel.I, OfPointer.RIGHT, 0);
+      nextStates[5] = new ForestState(ForestLabel.R, OfPointer.RIGHT, 0);
+      nextStates[6] = new ForestState(ForestLabel.X, OfPointer.RIGHT, 0);
     } else if ((state.forestLabel == ForestLabel.N) ||
                ((state.forestLabel == ForestLabel.I) && (state.excess > 0))) {
       nextStates = new ForestState[4];
-      nextStates[0] = new ForestState(ForestLabel.N, true, state.excess + 1);
-      nextStates[1] = new ForestState(ForestLabel.N, true, state.excess);
-      nextStates[2] = new ForestState(ForestLabel.I, true, state.excess);
-      nextStates[3] = new ForestState(ForestLabel.I, true, state.excess - 1);
+      nextStates[0] = new ForestState(ForestLabel.N, OfPointer.LEFT, state.excess + 1);
+      nextStates[1] = new ForestState(ForestLabel.N, OfPointer.LEFT, state.excess);
+      nextStates[2] = new ForestState(ForestLabel.I, OfPointer.LEFT, state.excess);
+      nextStates[3] = new ForestState(ForestLabel.I, OfPointer.LEFT, state.excess - 1);
     } else if ((state.forestLabel == ForestLabel.I) && (state.excess == 0)) {
       nextStates = new ForestState[3];
-      nextStates[0] = new ForestState(ForestLabel.N, true, 1);
-      nextStates[1] = new ForestState(ForestLabel.I, true, 0);
-      nextStates[2] = new ForestState(ForestLabel.L, true, 0);
+      nextStates[0] = new ForestState(ForestLabel.N, OfPointer.LEFT, 1);
+      nextStates[1] = new ForestState(ForestLabel.I, OfPointer.LEFT, 0);
+      nextStates[2] = new ForestState(ForestLabel.L, OfPointer.LEFT, 0);
     } else {
       nextStates = new ForestState[0];
     }
@@ -109,39 +110,76 @@ public class Sample {
     ForestState[] nextStates;
     if (state.forestLabel == ForestLabel.R) {
       nextStates = new ForestState[2];
-      nextStates[0] = new ForestState(ForestLabel.R, false, 0);
-      nextStates[1] = new ForestState(ForestLabel.X, false, 0);
+      nextStates[0] = new ForestState(ForestLabel.R, OfPointer.RIGHT, 0);
+      nextStates[1] = new ForestState(ForestLabel.X, OfPointer.RIGHT, 0);
     } else if (state.forestLabel == ForestLabel.X) {
       nextStates = new ForestState[2];
-      nextStates[0] = new ForestState(ForestLabel.N, false, 1);
-      nextStates[1] = new ForestState(ForestLabel.I, false, 0);
+      nextStates[0] = new ForestState(ForestLabel.N, OfPointer.RIGHT, 1);
+      nextStates[1] = new ForestState(ForestLabel.I, OfPointer.RIGHT, 0);
     } else if ((state.forestLabel == ForestLabel.N) ||
               ((state.forestLabel == ForestLabel.I) && (state.excess > 0))) {
       nextStates = new ForestState[4];
-      nextStates[0] = new ForestState(ForestLabel.N, false, state.excess + 1);
-      nextStates[1] = new ForestState(ForestLabel.N, false, state.excess);
-      nextStates[2] = new ForestState(ForestLabel.I, false, state.excess);
-      nextStates[3] = new ForestState(ForestLabel.I, false, state.excess - 1);
+      nextStates[0] = new ForestState(ForestLabel.N, OfPointer.RIGHT, state.excess + 1);
+      nextStates[1] = new ForestState(ForestLabel.N, OfPointer.RIGHT, state.excess);
+      nextStates[2] = new ForestState(ForestLabel.I, OfPointer.RIGHT, state.excess);
+      nextStates[3] = new ForestState(ForestLabel.I, OfPointer.RIGHT, state.excess - 1);
     } else if ((state.forestLabel == ForestLabel.I) && (state.excess == 0)) {
       nextStates = new ForestState[4];
-      nextStates[0] = new ForestState(ForestLabel.N, false, 1);
-      nextStates[1] = new ForestState(ForestLabel.I, false, 0);
-      nextStates[2] = new ForestState(ForestLabel.R, false, 0);
-      nextStates[3] = new ForestState(ForestLabel.X, false, 0);
+      nextStates[0] = new ForestState(ForestLabel.N, OfPointer.RIGHT, 1);
+      nextStates[1] = new ForestState(ForestLabel.I, OfPointer.RIGHT, 0);
+      nextStates[2] = new ForestState(ForestLabel.R, OfPointer.RIGHT, 0);
+      nextStates[3] = new ForestState(ForestLabel.X, OfPointer.RIGHT, 0);
     } else {
       nextStates = new ForestState[0];
     }
     return nextStates;
   }
-
-  private static final int[][] WEIGHTS = {{2,4,2,1,3},
-                                          {4,4,2,3,3},
-                                          {2,2,2,1,1},
-                                          {1,3,1,2,2},
-                                          {3,3,1,2,2}};
-
-  public static int weight(int labelA, int labelB) {
-    return WEIGHTS[labelA][labelB];
+  
+  public static int weight(ForestLabel labelA, ForestLabel labelB) {
+    switch(labelA) {
+      case I:
+        switch(labelB) {
+          case I: return 2;
+          case N: return 4;
+          case L: return 2;
+          case R: return 1;
+          case X: return 3;
+        }
+      case N:
+        switch(labelB) {
+          case I: return 4;
+          case N: return 4;
+          case L: return 2;
+          case R: return 3;
+          case X: return 3;
+        }
+      case L:
+        switch(labelB) {
+          case I: return 2;
+          case N: return 2;
+          case L: return 2;
+          case R: return 1;
+          case X: return 1;
+        }
+      case R:
+        switch(labelB) {
+          case I: return 1;
+          case N: return 3;
+          case L: return 1;
+          case R: return 2;
+          case X: return 2;
+        }
+      case X:
+        switch(labelB) {
+          case I: return 3;
+          case N: return 3;
+          case L: return 1;
+          case R: return 2;
+          case X: return 0;
+        }
+      default:
+        throw new IllegalArgumentException();
+    }
   }
     
   private static ArrayList<ForestKey> weightNKeys(HashMap<ForestKey,?> web, int n) {
@@ -158,8 +196,8 @@ public class Sample {
     ArrayList<ForestKey> toKeys = new ArrayList<ForestKey>();
     ForestState upperState = fromKey.upperState;
     ForestState lowerState = fromKey.lowerState;
-    ForestState[] upperSet = upperState.leftOfPointer ? updateLeft(upperState) : updateRight(upperState);
-    ForestState[] lowerSet = lowerState.leftOfPointer ? updateLeft(lowerState) : updateRight(lowerState);
+    ForestState[] upperSet = (upperState.ofPointer == OfPointer.LEFT)  ? updateLeft(upperState) : updateRight(upperState);
+    ForestState[] lowerSet = (lowerState.ofPointer == OfPointer.LEFT) ? updateLeft(lowerState) : updateRight(lowerState);
     for (int u = 0; u < upperSet.length; u++) {
       ForestState upperStateP = upperSet[u];
       for (int l = 0; l < lowerSet.length; l++) {
@@ -180,8 +218,8 @@ public class Sample {
   public static int[] countForestDiagrams(int maxWeight) {
     HashMap<ForestKey,Integer> countWeb = new HashMap<ForestKey,Integer>();
     countWeb.put(
-      new ForestKey(2, new ForestState(ForestLabel.L, true, 0),
-                       new ForestState(ForestLabel.L, true, 0)),
+      new ForestKey(2, new ForestState(ForestLabel.L, OfPointer.LEFT, 0),
+                       new ForestState(ForestLabel.L, OfPointer.LEFT, 0)),
       1);
     for (int n = 2; n < maxWeight; n++) {
       for (ForestKey fromKey : weightNKeys(countWeb, n)) {
@@ -197,8 +235,8 @@ public class Sample {
     int[] counts = new int[maxWeight-3];
     for (int i = 0; i < maxWeight-3; i++) {
       counts[i] = countWeb.get(new ForestKey(i+4,
-                                             new ForestState(ForestLabel.R, false, 0),
-                                             new ForestState(ForestLabel.R, false, 0)));
+                                             new ForestState(ForestLabel.R, OfPointer.RIGHT, 0),
+                                             new ForestState(ForestLabel.R, OfPointer.RIGHT, 0)));
     }
     return counts;
   }
@@ -231,8 +269,8 @@ public class Sample {
   public static HashMap<ForestKey,BackPointers> modelForestDiagrams(int maxWeight) {
     HashMap<ForestKey,BackPointers> modelWeb = new HashMap<ForestKey,BackPointers>();
     modelWeb.put(
-      new ForestKey(2, new ForestState(ForestLabel.L, true, 0),
-                       new ForestState(ForestLabel.L, true, 0)),
+      new ForestKey(2, new ForestState(ForestLabel.L, OfPointer.LEFT, 0),
+                       new ForestState(ForestLabel.L, OfPointer.LEFT, 0)),
       new BackPointers(1));
     for (int n = 2; n < maxWeight; n++) {
       for (ForestKey fromKey : weightNKeys(modelWeb, n)) {
@@ -265,13 +303,13 @@ public class Sample {
   }
   
   public static LinkedList<ForestKey> chooseRandomWord(HashMap<ForestKey, BackPointers> modelWeb, int weight) {
-    ForestKey atKey = new ForestKey(weight, new ForestState(ForestLabel.R, false, 0),
-                                            new ForestState(ForestLabel.R, false, 0));
+    ForestKey atKey = new ForestKey(weight, new ForestState(ForestLabel.R, OfPointer.RIGHT, 0),
+                                            new ForestState(ForestLabel.R, OfPointer.RIGHT, 0));
     if (atKey == null) {
       throw new IllegalArgumentException("Insufficiently deep model");
     }
-    ForestKey rootKey = new ForestKey(2, new ForestState(ForestLabel.L, true, 0),
-                                         new ForestState(ForestLabel.L, true, 0));
+    ForestKey rootKey = new ForestKey(2, new ForestState(ForestLabel.L, OfPointer.LEFT, 0),
+                                         new ForestState(ForestLabel.L, OfPointer.LEFT, 0));
     Random rand = new Random();
     LinkedList<ForestKey> wordKeys = new LinkedList<ForestKey>();
     while (!atKey.equals(rootKey)) {
