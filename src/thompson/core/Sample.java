@@ -302,7 +302,7 @@ public class Sample {
     return chosen.backKey;
   }
   
-  public static LinkedList<ForestKey> chooseRandomWord(HashMap<ForestKey, BackPointers> modelWeb, int weight) {
+  public static LinkedList<ForestKey> chooseRandomPath(HashMap<ForestKey,BackPointers> modelWeb, int weight) {
     ForestKey atKey = new ForestKey(weight, new ForestState(ForestLabel.R, OfPointer.RIGHT, 0),
                                             new ForestState(ForestLabel.R, OfPointer.RIGHT, 0));
     if (atKey == null) {
@@ -318,5 +318,69 @@ public class Sample {
     }
     wordKeys.addFirst(rootKey);
     return wordKeys;  
+  }
+  
+  static class ForestPair {
+    ForestLabel[] upperLabels, lowerLabels;
+    int upperNumLeft, lowerNumLeft;
+    
+    ForestPair(ForestLabel[] upperLabels, ForestLabel[] lowerLabels, int upperNumLeft, int lowerNumLeft) {
+      this.upperLabels = upperLabels;
+      this.lowerLabels = lowerLabels;
+      this.upperNumLeft = upperNumLeft;
+      this.lowerNumLeft = lowerNumLeft;
+    }
+    
+    public int numPairs() {
+      return this.upperLabels.length;
+    }
+
+    public String toString() {
+      StringBuffer topBuffer = new StringBuffer();
+      StringBuffer upperBuffer = new StringBuffer();
+      StringBuffer lowerBuffer = new StringBuffer();
+      StringBuffer bottomBuffer = new StringBuffer();
+      for (int i = 0; i < this.numPairs(); i++) {
+        topBuffer.append((i == this.upperNumLeft) ? "v " : "  ");
+        upperBuffer.append((i == 0) ? " " : ",");
+        lowerBuffer.append((i == 0) ? " " : ",");
+        upperBuffer.append(upperLabels[i]);
+        lowerBuffer.append(lowerLabels[i]);
+        bottomBuffer.append((i == this.lowerNumLeft) ? "^ " : "  ");
+      }
+      return topBuffer.toString() + "\n" + upperBuffer.toString() + "\n" +
+             lowerBuffer.toString() + "\n" + bottomBuffer.toString() + "\n";
+    }
+  }
+
+  public static ForestPair chooseRandomWord(HashMap<ForestKey,BackPointers> modelWeb, int weight) {
+    int attempt = 0;
+    while (true) {
+      attempt++;
+       LinkedList<ForestKey> path = chooseRandomPath(modelWeb, weight+4);
+       ForestKey leftKey = path.get(1);
+       ForestKey rightKey = path.get(path.size() - 2);  
+       if (!((leftKey.upperState.forestLabel == ForestLabel.L &&
+              leftKey.lowerState.forestLabel == ForestLabel.L) ||
+             (rightKey.upperState.forestLabel == ForestLabel.R &&
+              rightKey.lowerState.forestLabel == ForestLabel.R))) {
+         ForestLabel[] upperLabels = new ForestLabel[path.size() - 2];
+         ForestLabel[] lowerLabels = new ForestLabel[path.size() - 2];
+         int upperNumLeft = 0;
+         int lowerNumLeft = 0;
+         for (int i = 0; i < path.size() - 2; i++) {
+           ForestKey key = path.get(i+1);
+           if (key.upperState.ofPointer == OfPointer.LEFT) {
+             upperNumLeft++;
+           }
+           if (key.lowerState.ofPointer == OfPointer.LEFT) {
+             lowerNumLeft++;
+           }
+           upperLabels[i] = key.upperState.forestLabel;
+           lowerLabels[i] = key.lowerState.forestLabel;
+         }
+         return new ForestPair(upperLabels, lowerLabels, upperNumLeft, lowerNumLeft);         
+       }
+    }
   }
 }

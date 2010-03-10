@@ -7,9 +7,14 @@
          (seq (Sample/countForestDiagrams 10)))))
 
 (deftest test-model-forest-diagrams
-  (println (.size (Sample/modelForestDiagrams 24))))
+  (Sample/modelForestDiagrams 24))
+
+(deftest test-choose-random-path
+  (let [model (Sample/modelForestDiagrams 24)]
+    (Sample/chooseRandomPath model 24)))
 
 (deftest test-choose-random-word
-  (let [model (Sample/modelForestDiagrams 24)]
-    (doseq [e (Sample/chooseRandomWord model 24)]
-      (println e))))
+  (let [model (Sample/modelForestDiagrams 46)]
+    (dotimes [_ 10]
+      (println (str (Sample/chooseRandomWord model 42)))
+      (println))))
