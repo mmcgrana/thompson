@@ -15,6 +15,10 @@
 
 (deftest test-choose-random-word
   (let [model (Sample/modelForestDiagrams 46)]
-    (dotimes [_ 10]
-      (println (str (Sample/chooseRandomWord model 42)))
-      (println))))
+    (Sample/chooseRandomWord model 42)))
+
+; (doseq [n (range 50 100)]
+;   (println n (count (Sample/modelForestDiagrams n))))
+
+; (let [model (Sample/modelForestDiagrams 90)]
+;   (println (str (Sample/chooseRandomWord model 86))))
