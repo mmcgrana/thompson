@@ -1,6 +1,7 @@
 package thompson.core;
 
 import java.util.*;
+import java.math.*;
 
 public class Sample {
   enum ForestLabel {
@@ -215,24 +216,24 @@ public class Sample {
     return toKeys;
   }
 
-  public static long[] countForestDiagrams(int maxWeight) {
-    HashMap<ForestKey,Long> countWeb = new HashMap<ForestKey,Long>();
+  public static BigInteger[] countForestDiagrams(int maxWeight) {
+    HashMap<ForestKey,BigInteger> countWeb = new HashMap<ForestKey,BigInteger>();
     countWeb.put(
       new ForestKey(2, new ForestState(ForestLabel.L, OfPointer.LEFT, 0),
                        new ForestState(ForestLabel.L, OfPointer.LEFT, 0)),
-      1L);
+      BigInteger.ONE);
     for (int n = 2; n < maxWeight; n++) {
       for (ForestKey fromKey : weightNKeys(countWeb, n)) {
-        Long fromCount = countWeb.get(fromKey);
+        BigInteger fromCount = countWeb.get(fromKey);
         for (ForestKey toKey : successorKeys(fromKey)) {
-          Long toCount = countWeb.get(toKey);
-          if (toCount == null) { toCount = 0L; }
-          Long newCount = toCount + fromCount;
+          BigInteger toCount = countWeb.get(toKey);
+          if (toCount == null) { toCount = BigInteger.ZERO; }
+          BigInteger newCount = toCount.add(fromCount);
           countWeb.put(toKey, newCount);
         }
       }
     }
-    long[] counts = new long[maxWeight-3];
+    BigInteger[] counts = new BigInteger[maxWeight-3];
     for (int i = 0; i < maxWeight-3; i++) {
       counts[i] = countWeb.get(new ForestKey(i+4,
                                              new ForestState(ForestLabel.R, OfPointer.RIGHT, 0),
@@ -243,9 +244,9 @@ public class Sample {
   
   static class BackPointer {
     private ForestKey backKey;
-    private long backCount;
+    private BigInteger backCount;
     
-    BackPointer(ForestKey backKey, long backCount) {
+    BackPointer(ForestKey backKey, BigInteger backCount) {
       this.backKey = backKey;
       this.backCount = backCount;
     }
@@ -253,17 +254,17 @@ public class Sample {
   
   static class BackPointers {
     private ArrayList<BackPointer> backPointers;
-    private long totalBackCount;
+    private BigInteger totalBackCount;
     
-    BackPointers(long totalBackCount) {
+    BackPointers(BigInteger totalBackCount) {
       this.backPointers = new ArrayList<BackPointer>();
       this.totalBackCount = totalBackCount;
     }
   }
   
-  private static void addBackPointer(BackPointers backPointers, ForestKey backKey, long backCount) {
+  private static void addBackPointer(BackPointers backPointers, ForestKey backKey, BigInteger backCount) {
     backPointers.backPointers.add(new BackPointer(backKey, backCount));
-    backPointers.totalBackCount += backCount;
+    backPointers.totalBackCount = backPointers.totalBackCount.add(backCount);
   }
   
   public static HashMap<ForestKey,BackPointers> modelForestDiagrams(int maxWeight) {
@@ -271,14 +272,14 @@ public class Sample {
     modelWeb.put(
       new ForestKey(2, new ForestState(ForestLabel.L, OfPointer.LEFT, 0),
                        new ForestState(ForestLabel.L, OfPointer.LEFT, 0)),
-      new BackPointers(1L));
+      new BackPointers(BigInteger.ONE));
     for (int n = 2; n < maxWeight; n++) {
       for (ForestKey fromKey : weightNKeys(modelWeb, n)) {
         BackPointers fromPointers = modelWeb.get(fromKey);
-        long fromCount = fromPointers.totalBackCount;
+        BigInteger fromCount = fromPointers.totalBackCount;
         for (ForestKey toKey : successorKeys(fromKey)) {
           BackPointers toPointers = modelWeb.get(toKey);
-          if (toPointers == null) { toPointers = new BackPointers(0L); }
+          if (toPointers == null) { toPointers = new BackPointers(BigInteger.ZERO); }
           addBackPointer(toPointers, fromKey, fromCount);
           modelWeb.put(toKey, toPointers);
         }
@@ -289,11 +290,11 @@ public class Sample {
   
   private static ForestKey chooseBackKey(BackPointers backPointers, Random rand) {
     BackPointer chosen = null;
-    long finger = (long) (backPointers.totalBackCount * rand.nextDouble());
-    long at = 0;
+    BigInteger finger = Util.nextRandomBigInteger(backPointers.totalBackCount, rand);
+    BigInteger at = BigInteger.ZERO;
     for (BackPointer backPointer : backPointers.backPointers) {
-      at += backPointer.backCount;
-      if (at > finger) {
+      at = at.add(backPointer.backCount);
+      if (at.compareTo(finger) > 0) {
         chosen = backPointer;
         break;
       }

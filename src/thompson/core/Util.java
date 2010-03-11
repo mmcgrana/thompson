@@ -1,6 +1,7 @@
 package thompson.core;
 
 import java.util.*;
+import java.math.*;
 
 public class Util {
   public static int[] toIntArray(ArrayList<Integer> ints) {
@@ -12,7 +13,15 @@ public class Util {
   }
   
   public static int hashCombine(int seed, int hash) {
-	  seed ^= hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-	  return seed;
+    seed ^= hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    return seed;
+  }
+  
+  public static BigInteger nextRandomBigInteger(BigInteger n, Random rand) {
+    BigInteger result = new BigInteger(n.bitLength(), rand);
+    while(result.compareTo(n) >= 0) {
+      result = new BigInteger(n.bitLength(), rand);
+    }
+    return result;
   }
 }
