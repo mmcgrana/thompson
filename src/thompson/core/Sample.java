@@ -217,6 +217,7 @@ public class Sample {
   }
 
   public static BigInteger[] countForestDiagrams(int maxWeight) {
+    BigInteger[] counts = new BigInteger[maxWeight-3];
     HashMap<ForestKey,BigInteger> countWeb = new HashMap<ForestKey,BigInteger>();
     countWeb.put(
       new ForestKey(2, new ForestState(ForestLabel.L, OfPointer.LEFT, 0),
@@ -231,13 +232,13 @@ public class Sample {
           BigInteger newCount = toCount.add(fromCount);
           countWeb.put(toKey, newCount);
         }
+        countWeb.remove(fromKey);
       }
-    }
-    BigInteger[] counts = new BigInteger[maxWeight-3];
-    for (int i = 0; i < maxWeight-3; i++) {
-      counts[i] = countWeb.get(new ForestKey(i+4,
-                                             new ForestState(ForestLabel.R, OfPointer.RIGHT, 0),
-                                             new ForestState(ForestLabel.R, OfPointer.RIGHT, 0)));
+      if (n >= 3)
+      counts[n-3] = countWeb.get(
+                      new ForestKey(n+1,
+                        new ForestState(ForestLabel.R, OfPointer.RIGHT, 0),
+                        new ForestState(ForestLabel.R, OfPointer.RIGHT, 0)));
     }
     return counts;
   }
