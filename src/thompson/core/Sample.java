@@ -307,7 +307,7 @@ public class Sample {
   public static LinkedList<ForestKey> chooseRandomPath(HashMap<ForestKey,BackPointers> modelWeb, int weight) {
     ForestKey atKey = new ForestKey(weight, new ForestState(ForestLabel.R, OfPointer.RIGHT, 0),
                                             new ForestState(ForestLabel.R, OfPointer.RIGHT, 0));
-    if (atKey == null) {
+    if (!modelWeb.containsKey(atKey)) {
       throw new IllegalArgumentException("Insufficiently deep model");
     }
     ForestKey rootKey = new ForestKey(2, new ForestState(ForestLabel.L, OfPointer.LEFT, 0),
