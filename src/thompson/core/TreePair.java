@@ -2,6 +2,8 @@ package thompson.core;
 
 import java.util.*;
 
+// Represents an element of F as a pair of trees, in particular as described
+// in "Combinatorial Properties of Thompson's Group F" by Cleary and Taback.
 public class TreePair {
   private Node minusRoot, plusRoot;
 
@@ -31,6 +33,10 @@ public class TreePair {
     }
   }
 
+  // Returns an element in generator-exponent form corresponding directly to
+  // the recieving tree-pair instance. The classic leaf-exponent calculation is
+  // used. Note that the returned GenExp is not neccisarily in 'unique' normal
+  // form; see GenExp#toUniqueNormalForm.
   public GenExp toNormalForm() {
     // size the product
     int numTerms = 0;
@@ -96,6 +102,8 @@ public class TreePair {
     return root;
   }
 
+  // Return a tree pair for an element with a single term described by the
+  // given base and exponent.
   public static TreePair fromTerm(int base, int exponent) {
     if (base < 0) {
       throw new IllegalArgumentException();
@@ -111,6 +119,8 @@ public class TreePair {
     }
   }
 
+  // Returns the contribution to the word length of the given pair of caret
+  // types.
   public static int contribution(CaretType minusType, CaretType plusType) {
     if ((minusType == CaretType.L0) || (plusType == CaretType.L0)) {
       if (!((minusType == CaretType.L0) && (plusType == CaretType.L0))) {
@@ -191,9 +201,7 @@ public class TreePair {
     return length;
   }
 
-  // Eliminates common carrots between the tree pairs
-  // Mutates the instance
-  // OPTIMIZE: more efficient reduction approach
+  // Eliminates common carrots between the tree pairs.
   private void reduce() {
     boolean passNeeded = true;
     while (passNeeded) {
@@ -217,7 +225,6 @@ public class TreePair {
     }
   }
   
-  // Helper for unify
   private static void unifyFrom(Node plus, ArrayList<Node> plusComplements,
                                 Node minus, ArrayList<Node> minusComplements) {
     if (plus.isLeaf() && minus.isLeaf()) {
@@ -236,7 +243,6 @@ public class TreePair {
 
   // Modifies the tree pairs so that the plus tree of the left is the same
   // as the minus tree of the right.
-  // Mutates both instances
   private static void unify(TreePair treePairLeft, TreePair treePairRight) {
     Node plus = treePairLeft.plusRoot;
     Node minus = treePairRight.minusRoot;
@@ -247,11 +253,12 @@ public class TreePair {
     unifyFrom(plus, plusComplements, minus, minusComplements);
   }
   
+  // Returns the algebriac inverse of the reciever.
   public TreePair invert() {
     return new TreePair(this.plusRoot, this.minusRoot);
   }
 
-  // Returns fg
+  // Returns the algebraic product of the two given tree pairs.
   public static TreePair multiply(TreePair f, TreePair g) {
     TreePair fCopy = f.copy();
     TreePair gCopy = g.copy();
@@ -261,7 +268,7 @@ public class TreePair {
     return product;
   }
 
-  // Returns the product of the given factors
+  // Returns the product of all of the given factors.
   public static TreePair product(TreePair[] factors) {
     int numFactors = factors.length;
     TreePair accum = factors[0];

@@ -1,5 +1,8 @@
 package thompson.core;
 
+// Represents an element of F as a pair of forests, in particular as described
+// in "Counting elements and geodesics in Thompson's group F" by Elder, Fuxy,
+// and Rechintzer.
 public class ForestPair {
   ForestLabel[] upperLabels, lowerLabels;
   int upperNumLeft, lowerNumLeft;
@@ -79,6 +82,8 @@ public class ForestPair {
     return tree;
   }
   
+  // Returns the tree pair that is implied by this forest pair, i.e. the tree
+  // pair representation of this element.
   public TreePair toTreePair() {
     return new TreePair(reifyForest(this.lowerLabels, this.lowerNumLeft),
                         reifyForest(this.upperLabels, this.upperNumLeft));

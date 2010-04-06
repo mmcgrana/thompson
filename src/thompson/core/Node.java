@@ -2,6 +2,8 @@ package thompson.core;
 
 import java.util.*;
 
+// Represents nodes and their corresponding subtrees in the tree-pair
+// representation of elements of F.
 public class Node {
   protected Node left, right, parent;
   protected int index;
@@ -73,24 +75,20 @@ public class Node {
     return this.parent.right == this;
   }
   
-  // OPTIMIZE: precompute
   public boolean isLeftEdge() {
     return (this.isRoot()) ||
            (this.isLeftChild() && this.parent.isLeftEdge());
   }
   
-  // OPTIMIZE: precompute
   public boolean isRightEdge() {
     return (this.isRoot()) ||
            (this.isRightChild() && this.parent.isRightEdge());
   }
   
-  // OPTIMIZE: based on above
   public boolean isInterior() {
     return !(this.isLeftEdge() || this.isRightEdge());
   }
   
-  // OPTIMIZE: precompute
   public int exponent() {
     if (this.isRoot() || this.isRightChild() || this.parent.isRightEdge()) {
       return 0;

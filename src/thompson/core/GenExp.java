@@ -3,6 +3,9 @@ package thompson.core;
 import java.util.*;
 import java.util.regex.*;
 
+// Represents an element of F as sequence of base^exponent terms, in particular
+// as described in "Combinatorial Properties of Thompson's Group F" by Cleary
+// and Taback.
 public class GenExp {
   private static final Pattern RE_LEFT_PAREN =   Pattern.compile("\\(");
   private static final Pattern RE_X_UNDERSCORE = Pattern.compile("x_");
@@ -104,6 +107,10 @@ public class GenExp {
     return new GenExp(coalGensTight, coalExpsTight);
   }
   
+  // Returns a new GenExp instance representing the same element as the reciever
+  // but with the generators arranged in increasing-decreasing order as required
+  // by normal form. Note that this normal form is not guaranteed to be the
+  // unique normal form - see GenExp#toUniqueNormalForm.
   public GenExp toNormalForm() {
     int[] gens = Arrays.copyOf(this.gens, this.gens.length);
     int[] exps = Arrays.copyOf(this.exps, this.exps.length);
@@ -111,7 +118,6 @@ public class GenExp {
     // for i < j, a positive, b anything
     //   (x_j^b)(x_i^a) = (x_i^a)(x_j+a^b)      shuffle x_i^a to left   (inc j base by i exp)
     //   (x_i^-a)(x_j^b) = (x_j+a^b)(x_i^-a)    shuffle x_i^-a to right (inc j base by i exp abs)
-    // OPTIMIZE: list-based shuffling
     boolean needsShuffle = true;
     while (needsShuffle) {
       needsShuffle = false;
@@ -191,16 +197,16 @@ public class GenExp {
 
     int pLength = firstNI;
     int nLength = be.numTerms() - firstNI;
-    int[] pGens =     new int[pLength];
+    int[] pGens = new int[pLength];
     int[] pExps = new int[pLength];
-    int[] nGens =     new int[nLength];
+    int[] nGens = new int[nLength];
     int[] nExps = new int[nLength];
     for (int i = 0; i < pLength; i++) {
-      pGens[i]     = be.gens[firstNI - 1 - i]; 
+      pGens[i] = be.gens[firstNI - 1 - i]; 
       pExps[i] = be.exps[firstNI - 1 - i];
     }
     for (int i = 0; i < nLength; i++) {
-      nGens[i] =     be.gens[firstNI + i];
+      nGens[i] = be.gens[firstNI + i];
       nExps[i] = be.exps[firstNI + i];
     }
     
@@ -209,6 +215,8 @@ public class GenExp {
     return ret;
   }
   
+  // Returns a new GenExp instance representing the element in its unique normal
+  // form. This method requires and that the reciever is already in normal form.
   public GenExp toUniqueNormalForm() {
     // assume we are working from normal form
     if (!this.isNormalForm()) { throw new IllegalArgumentException(this.toString()); }
@@ -279,10 +287,10 @@ public class GenExp {
     }
     
     // pack remaining terms into unified arrays
-    int[] gens =     new int[pLength + nLength];
+    int[] gens = new int[pLength + nLength];
     int[] exps = new int[pLength + nLength];
     for (int i = 0; i < pLength; i++) {
-      gens[i]     = pGens[pLength - 1 - i];
+      gens[i] = pGens[pLength - 1 - i];
       exps[i] = pExps[pLength - 1 - i];
     }
     for (int i = 0; i < nLength; i++) {
@@ -325,7 +333,6 @@ public class GenExp {
   }
 
   // Returns a TreePair corresponding to this instance.
-  // OPTIMIZE: linear tree construction
   public TreePair toTreePair() {
     TreePair[] factors = new TreePair[this.numTerms()];
     for (int i = 0; i < this.numTerms(); i++) {
