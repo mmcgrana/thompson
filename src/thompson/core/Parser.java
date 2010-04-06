@@ -2,6 +2,7 @@ package thompson.core;
 
 import java.util.regex.*;
 
+// A simple parser helper for use with reading GenExp string representations.
 public class Parser {
   private String input;
   private int pointer;
@@ -21,7 +22,6 @@ public class Parser {
 
   public String next(Pattern pattern) {
     Matcher matcher = pattern.matcher(this.rest());
-    
     if (matcher.lookingAt()) {
       this.pointer += matcher.end();
       return matcher.group();
