@@ -4,14 +4,6 @@ import java.util.*;
 import java.math.*;
 
 public class Sample {
-  enum ForestLabel {
-    I, N, L, R, X
-  }
-
-  enum OfPointer {
-    LEFT, RIGHT
-  }
-
   static class ForestState {
     private ForestLabel forestLabel;
     private OfPointer ofPointer;
@@ -321,41 +313,8 @@ public class Sample {
     wordKeys.addFirst(rootKey);
     return wordKeys;  
   }
-  
-  static class ForestPair {
-    ForestLabel[] upperLabels, lowerLabels;
-    int upperNumLeft, lowerNumLeft;
-    
-    ForestPair(ForestLabel[] upperLabels, ForestLabel[] lowerLabels, int upperNumLeft, int lowerNumLeft) {
-      this.upperLabels = upperLabels;
-      this.lowerLabels = lowerLabels;
-      this.upperNumLeft = upperNumLeft;
-      this.lowerNumLeft = lowerNumLeft;
-    }
-    
-    public int numPairs() {
-      return this.upperLabels.length;
-    }
 
-    public String toString() {
-      StringBuffer topBuffer = new StringBuffer();
-      StringBuffer upperBuffer = new StringBuffer();
-      StringBuffer lowerBuffer = new StringBuffer();
-      StringBuffer bottomBuffer = new StringBuffer();
-      for (int i = 0; i < this.numPairs(); i++) {
-        topBuffer.append((i == this.upperNumLeft) ? "v " : "  ");
-        upperBuffer.append((i == 0) ? " " : ",");
-        lowerBuffer.append((i == 0) ? " " : ",");
-        upperBuffer.append(upperLabels[i]);
-        lowerBuffer.append(lowerLabels[i]);
-        bottomBuffer.append((i == this.lowerNumLeft) ? "^ " : "  ");
-      }
-      return topBuffer.toString() + "\n" + upperBuffer.toString() + "\n" +
-             lowerBuffer.toString() + "\n" + bottomBuffer.toString() + "\n";
-    }
-  }
-
-  public static ForestPair chooseRandomWord(HashMap<ForestKey,BackPointers> modelWeb, int weight) {
+  public static ForestPair chooseRandomForestPair(HashMap<ForestKey,BackPointers> modelWeb, int weight) {
     int attempt = 0;
     while (true) {
       attempt++;

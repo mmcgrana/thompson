@@ -49,8 +49,12 @@ public class Node {
     }
   }
 
+  public Node root() {
+    return isRoot() ? this : this.parent.root();
+  }
+  
   public boolean isRoot() {
-    return parent == null;
+    return this.parent == null;
   }
   
   public boolean isLeaf() {

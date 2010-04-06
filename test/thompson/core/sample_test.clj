@@ -13,6 +13,6 @@
   (let [model (Sample/modelForestDiagrams 24)]
     (Sample/chooseRandomPath model 24)))
 
-(deftest test-choose-random-word
+(deftest test-choose-random-forest-pair
   (let [model (Sample/modelForestDiagrams 46)]
-    (Sample/chooseRandomWord model 42)))
+    (Sample/chooseRandomForestPair model 42)))
