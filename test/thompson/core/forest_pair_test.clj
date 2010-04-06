@@ -1,7 +1,8 @@
 (ns thompson.core.forest-pair-test
   (:use clojure.test)
   (:import thompson.core.ForestLabel
-           thompson.core.ForestPair))
+           thompson.core.ForestPair
+           thompson.core.Sample))
 
 (def label-consts
   {"I" ForestLabel/I
@@ -31,3 +32,9 @@
     "LIILLL" "ILRRRR" 6 2)
   (test-case "(x_1^1)(x_2^1)(x_3^2)(x_5^2)(x_0^-2)"
     "NNINII" "LLRRRR" 0 2))
+
+(deftest test-word-length-fuzz
+  (let [m (Sample/modelForestDiagrams 46)]
+    (dotimes [_ 100]
+      (let [f (Sample/chooseRandomForestPair m 42)]
+        (is (= 42 (.wordLength (.toTreePair f))))))))
