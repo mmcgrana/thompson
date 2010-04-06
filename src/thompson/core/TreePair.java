@@ -111,14 +111,82 @@ public class TreePair {
     }
   }
 
+  public static int contribution(CaretType minusType, CaretType plusType) {
+    if ((minusType == CaretType.L0) || (plusType == CaretType.L0)) {
+      if (!((minusType == CaretType.L0) && (plusType == CaretType.L0))) {
+        throw new IllegalArgumentException();
+      }
+      return 0;
+    } else {
+      switch(minusType) {
+        case R0:
+          switch(plusType) {
+            case R0:  return 0;
+            case RNI: return 2;
+            case RI:  return 2;
+            case LL:  return 1;
+            case I0:  return 1;
+            case IR:  return 3;
+          }
+        case RNI:
+          switch(plusType) {
+            case R0:  return 2;
+            case RNI: return 2;
+            case RI:  return 2;
+            case LL:  return 1;
+            case I0:  return 1;
+            case IR:  return 3;
+          }
+        case RI:
+          switch(plusType) {
+            case R0:  return 2;
+            case RNI: return 2;
+            case RI:  return 2;
+            case LL:  return 1;
+            case I0:  return 3;
+            case IR:  return 3;
+          }
+        case LL:
+          switch(plusType) {
+            case R0:  return 1;
+            case RNI: return 1;
+            case RI:  return 1;
+            case LL:  return 2;
+            case I0:  return 2;
+            case IR:  return 2;
+          }
+        case I0:
+          switch(plusType) {
+            case R0:  return 1;
+            case RNI: return 1;
+            case RI:  return 3;
+            case LL:  return 2;
+            case I0:  return 2;
+            case IR:  return 4;
+          }
+        case IR:
+          switch(plusType) {
+            case R0:  return 3;
+            case RNI: return 3;
+            case RI:  return 3;
+            case LL:  return 2;
+            case I0:  return 4;
+            case IR:  return 4;
+          }
+        default:
+          throw new IllegalArgumentException();
+      }
+    }
+  }
+  
   // Returns the world length with respect to the {x_0,x_1} generating set
   public int wordLength() {
-    int[] minusTypes = minusRoot.caretTypes();
-    int[] plusTypes  = plusRoot.caretTypes();
+    CaretType[] minusTypes = minusRoot.caretTypes();
+    CaretType[] plusTypes  = plusRoot.caretTypes();
     int numCarets = minusTypes.length;
     int length = 0;
     for (int i = 0; i < numCarets; i++) {
-      length += CaretType.contribution(minusTypes[i], plusTypes[i]);
+      length += contribution(minusTypes[i], plusTypes[i]);
     }
     return length;
   }

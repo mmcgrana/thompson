@@ -1,7 +1,16 @@
 (ns thompson.core.tree-pair-test
   (:use clojure.test
         thompson.core.test-util)
-  (:import (thompson.core TreePair GenExp)))
+  (:import thompson.core.TreePair
+           thompson.core.GenExp
+           thompson.core.CaretType))
+
+(deftest test-one-type-l0-is-disallowed
+  (is (thrown? IllegalArgumentException
+    (TreePair/contribution CaretType/L0 CaretType/IR))))
+
+(deftest test-contribution
+  (is (= 4 (TreePair/contribution CaretType/IR CaretType/I0))))
 
 (deftest test-from-term
   (are [b e s] (= s (.toString (TreePair/fromTerm b e)))

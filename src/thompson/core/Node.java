@@ -159,11 +159,11 @@ public class Node {
     }
   }
   
-  // Returns an array of CaretType ints corresponding to the inorder carets
-  public int[] caretTypes() {
+  // Returns an array of CaretTypes corresponding to the inorder carets
+  public CaretType[] caretTypes() {
     ArrayList<Node> carets = this.carets();
     int numCarets = this.numCarets();
-    int[] caretTypes = new int[numCarets];
+    CaretType[] caretTypes = new CaretType[numCarets];
     int prevInteriorIdx = -1;
     for (int i = (numCarets - 1); i >= 0; i--) {
       Node caret = carets.get(i);
