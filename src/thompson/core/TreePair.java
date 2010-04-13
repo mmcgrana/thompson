@@ -5,7 +5,7 @@ import java.util.*;
 // Represents an element of F as a pair of trees, in particular as described
 // in "Combinatorial Properties of Thompson's Group F" by Cleary and Taback.
 public class TreePair {
-  private Node minusRoot, plusRoot;
+  public Node minusRoot, plusRoot;
 
   public TreePair(Node minusRoot, Node plusRoot) {
     if ((minusRoot == null) || (plusRoot == null)) {
@@ -202,7 +202,7 @@ public class TreePair {
   }
 
   // Eliminates common carrots between the tree pairs.
-  private void reduce() {
+  public void reduce() {
     boolean passNeeded = true;
     while (passNeeded) {
       passNeeded = false;

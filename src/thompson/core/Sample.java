@@ -6,73 +6,7 @@ import java.math.*;
 // Implementation of and extensions to various algorithms described in
 // "Counting elements and geodesics in Thompson's group F" by Elder, Fuxy, and
 // Rechintzer.
-public class Sample {
-  static class ForestState {
-    private ForestLabel forestLabel;
-    private OfPointer ofPointer;
-    private int excess;
-    
-    ForestState(ForestLabel forestLabel, OfPointer ofPointer, int excess) {
-      this.forestLabel = forestLabel;
-      this.ofPointer = ofPointer;
-      this.excess = excess;
-    }
-    
-    public int hashCode() {
-      return Util.hashCombine(this.forestLabel.hashCode(),
-               Util.hashCombine(this.ofPointer.hashCode(),
-                                this.excess));
-    }
-    
-    public boolean equals(Object obj) {
-      if (!(obj instanceof ForestState)) {
-        return false;
-      } else {
-        ForestState state = (ForestState) obj;
-        return ((this.forestLabel == state.forestLabel) &&
-                (this.ofPointer == state.ofPointer) &&
-                (this.excess == state.excess));
-      }
-    }
-    
-    public String toString() {
-      return "{" + forestLabel + ", " + ofPointer + ", " + excess + "}";
-    }
-  }
-
-  static class ForestKey {
-    int weight;
-    ForestState upperState, lowerState;
-    
-    ForestKey(int weight, ForestState upperState, ForestState lowerState) {
-      this.weight = weight;
-      this.upperState = upperState;
-      this.lowerState = lowerState;
-    }
-    
-    public int hashCode() {
-      return Util.hashCombine(upperState.hashCode(),
-               Util.hashCombine(lowerState.hashCode(), this.weight));
-    }
-    
-    public boolean equals(Object obj) {
-      if (!(obj instanceof ForestKey)) {
-        return false;
-      } else {
-        ForestKey elem = (ForestKey) obj;
-        return ((this.weight == elem.weight) &&
-                this.upperState.equals(elem.upperState) &&
-                this.lowerState.equals(elem.lowerState));
-      }
-    }
-    
-    public String toString() {
-      return "<" + weight + "," +
-                   upperState.toString() + "," +
-                   lowerState.toString() + ">";
-    }
-  }
-  
+public class Sample { 
   private static ForestState[] updateLeft(ForestState state) {    
     ForestState[] nextStates;
     if (state.forestLabel == ForestLabel.L) {
@@ -265,7 +199,7 @@ public class Sample {
   
   // Returns a web modeling the elements of F with 'weight' (in the EFR sense)
   // of at most maxWeight. Such a model can be used to generate random elements
-  // with word length of at most maxWeight-4 with choooseRandomForestPair.
+  // with word length of at most maxWeight-4 with choooseRandomTreePair.
   public static HashMap<ForestKey,BackPointers> modelForestDiagrams(int maxWeight) {
     HashMap<ForestKey,BackPointers> modelWeb = new HashMap<ForestKey,BackPointers>();
     modelWeb.put(
@@ -302,7 +236,7 @@ public class Sample {
     return chosen.backKey;
   }
   
-  private static LinkedList<ForestKey> chooseRandomPath(HashMap<ForestKey,BackPointers> modelWeb, int weight) {
+  private static LinkedList<ForestKey> choosePath(HashMap<ForestKey,BackPointers> modelWeb, int weight) {
     ForestKey atKey = new ForestKey(weight, new ForestState(ForestLabel.R, OfPointer.RIGHT, 0),
                                             new ForestState(ForestLabel.R, OfPointer.RIGHT, 0));
     if (!modelWeb.containsKey(atKey)) {
@@ -320,37 +254,187 @@ public class Sample {
     return wordKeys;  
   }
 
+  // add a token to the chain that will eventually be passed to reifySubtree
+  private static TreeToken appendForestState(TreeToken tailToken, ForestState forestState) {
+    TreeToken newTail = new TreeToken(forestState.forestLabel, forestState.excess);
+    int excessDiff = newTail.excess - tailToken.excess;
+    if ((newTail.bigLabel == ForestLabel.N) && (excessDiff == 1)) {
+      tailToken.nextLittleLabelIsN = true;
+    } else if ((newTail.bigLabel == ForestLabel.N) && (excessDiff == 0)) {
+      tailToken.nextLittleLabelIsN = false;
+    } else if ((newTail.bigLabel == ForestLabel.I) && (excessDiff == -1)) {
+      tailToken.nextLittleLabelIsN = false;
+    } else if ((newTail.bigLabel == ForestLabel.I) && (excessDiff == 0)) {
+      tailToken.nextLittleLabelIsN = true;
+    } else {
+      throw new RuntimeException(newTail.bigLabel + " " + excessDiff);
+    }
+    tailToken.nextToken = newTail;
+    return newTail;
+  }
+ 
+  // destructively convert a chain of TreeTokens into the corresponding tree
+  private static Node reifySubtree(TreeToken headToken) {
+    while (!(headToken.nextToken == null)) {
+      TreeToken atToken = headToken;
+      TreeToken pairToken = null;
+      while (pairToken == null) {
+        if ((atToken.bigLabel == ForestLabel.N) &&
+            (atToken.nextToken.bigLabel == ForestLabel.I)) {
+          pairToken = atToken;
+        } else {
+          atToken = atToken.nextToken;
+        }
+      }
+      Node parent = new Node();
+      parent.setLeft(pairToken.node);
+      parent.setRight(pairToken.nextToken.node);
+      pairToken.node = parent;
+      pairToken.bigLabel = (pairToken.nextLittleLabelIsN) ? ForestLabel.N :
+                                                            ForestLabel.I;
+      pairToken.nextLittleLabelIsN = pairToken.nextToken.nextLittleLabelIsN;
+      pairToken.nextToken = pairToken.nextToken.nextToken;
+    }
+    return headToken.node;
+  }
+  
+  private static ForestState getForestState(List<ForestKey> forestPath, int i, boolean upper) {
+    return (upper ? forestPath.get(i).upperState : forestPath.get(i).lowerState);
+  }
+
+  private static ForestLabel getForestLabel(List<ForestKey> forestPath, int i, boolean upper) {
+    return getForestState(forestPath, i, upper).forestLabel;
+  }
+  
+  private static OfPointer getOfPointer(List<ForestKey> forestPath, int i, boolean upper) {
+    return getForestState(forestPath, i, upper).ofPointer;
+  }
+  
+  private static boolean isSubtreeLabel(ForestLabel label) {
+    return ((label == ForestLabel.I) || (label == ForestLabel.N));
+  }
+
+  // Returns a single tree corresponding to either the upper or lower forest
+  // encoded by the given path.
+  private static Node reifyTree(List<ForestKey> forestPath, boolean upper) {
+    // determine the number of keys marked as left of the pointer
+    int numLeft = 0;
+    for (int i = 0; i < forestPath.size(); i++) {
+      if (getOfPointer(forestPath, i, upper) == OfPointer.LEFT) {
+        numLeft++;
+      }
+    }
+    // build the left side of the tree
+    int at = 0;
+    Node leftTree = new Node();
+    while (at < numLeft) {
+      // handle trivial, single-node subtrees
+      if (!isSubtreeLabel(getForestLabel(forestPath, at, upper))) {
+        Node parent = new Node();
+        Node trivialSubtree = new Node();
+        parent.setLeft(leftTree);
+        parent.setRight(trivialSubtree);
+        leftTree = parent;
+        at++;
+      // handle non-trival subtrees that need to be reified from NIni seqs
+      } else {
+        TreeToken headToken = new TreeToken();
+        TreeToken atToken = headToken;
+        ForestState atState = getForestState(forestPath, at, upper);
+        while ((atState != null) && isSubtreeLabel(atState.forestLabel)) {
+          atToken = appendForestState(atToken, atState);
+          at++;
+          atState = (at < numLeft) ?  getForestState(forestPath, at, upper) : null;
+        }
+        Node parent = new Node();
+        Node subtree = reifySubtree(headToken);
+        parent.setLeft(leftTree);
+        parent.setRight(subtree);
+        leftTree = parent;
+        // if the next label after the subtree is an L, eat it
+        if ((atState != null) && atState.forestLabel == ForestLabel.L) {
+          at++;
+        }
+      }
+    }
+    // build the right side of the tree
+    Node rightTree = new Node();
+    Node rightTip = rightTree;
+    while (at < forestPath.size()) {
+      // handle trivial, single-node subtrees
+      if (!isSubtreeLabel(getForestLabel(forestPath, at, upper))) {
+        Node trivialSubtree = new Node();
+        Node extension = new Node();
+        rightTip.setLeft(trivialSubtree);
+        rightTip.setRight(extension);
+        rightTip = extension;
+        at++;
+      // handle non-trival subtrees that need to be reified from NIni seqs
+      } else {
+        TreeToken headToken = new TreeToken();
+        TreeToken atToken = headToken;
+        ForestState atState = getForestState(forestPath, at, upper);
+        while ((atState != null) && isSubtreeLabel(atState.forestLabel)) {
+          atToken = appendForestState(atToken, atState);
+          at++;
+          atState = (at < forestPath.size()) ?  getForestState(forestPath, at, upper) : null;
+        }
+        Node subtree = reifySubtree(headToken);
+        Node extension = new Node();
+        rightTip.setLeft(subtree);
+        rightTip.setRight(extension);
+        rightTip = extension;
+        // if the next label after the subtree is an X or R, eat it
+        if ((atState != null) &&
+            ((atState.forestLabel == ForestLabel.X) ||
+             (atState.forestLabel == ForestLabel.R))) {
+          at++;
+        }
+      }
+    }
+    // we may need one extra node for a trailing L or R
+    // such a node always goes on the right side of the tree
+    ForestLabel lastLabel = getForestLabel(forestPath, forestPath.size()-1, upper);
+    if ((lastLabel == ForestLabel.L) || (lastLabel == ForestLabel.R)) {
+      Node trivialSubtree = new Node();
+      Node extension = new Node();
+      rightTip.setLeft(trivialSubtree);
+      rightTip.setRight(extension);
+    }
+    // join the two halfs of the tree
+    Node tree = new Node();
+    tree.setLeft(leftTree);
+    tree.setRight(rightTree);
+    return tree;
+  }
+
+  // Returns a TreePair corresponding to the element represented by the given
+  // forest encoding.
+  public static TreePair reifyTreePair(List<ForestKey> forestPath) {
+    TreePair treePair = new TreePair(reifyTree(forestPath, false),
+                                     reifyTree(forestPath, true));
+    treePair.reduce();
+    return treePair;
+  }
+
   // Uses the given modelWeb, as generated by modelForestDiagrams, to produce
   // an element selected uniformly at random from all elements in F of the given
   // word length. Note that this requires a model built for weight at least
   // length+4.
-  public static ForestPair chooseRandomForestPair(HashMap<ForestKey,BackPointers> modelWeb, int length) {
+  public static TreePair chooseTreePair(HashMap<ForestKey,BackPointers> modelWeb, int length) {
     int attempt = 0;
     while (true) {
       attempt++;
-       LinkedList<ForestKey> path = chooseRandomPath(modelWeb, length+4);
-       ForestKey leftKey = path.get(1);
-       ForestKey rightKey = path.get(path.size() - 2);  
+       LinkedList<ForestKey> forestPath = choosePath(modelWeb, length+4);
+       forestPath.removeFirst();
+       forestPath.removeLast();
+       ForestKey leftKey = forestPath.peekFirst();
+       ForestKey rightKey = forestPath.peekLast();
        if (!((leftKey.upperState.forestLabel == ForestLabel.L &&
               leftKey.lowerState.forestLabel == ForestLabel.L) ||
              (rightKey.upperState.forestLabel == ForestLabel.R &&
               rightKey.lowerState.forestLabel == ForestLabel.R))) {
-         ForestLabel[] upperLabels = new ForestLabel[path.size() - 2];
-         ForestLabel[] lowerLabels = new ForestLabel[path.size() - 2];
-         int upperNumLeft = 0;
-         int lowerNumLeft = 0;
-         for (int i = 0; i < path.size() - 2; i++) {
-           ForestKey key = path.get(i+1);
-           if (key.upperState.ofPointer == OfPointer.LEFT) {
-             upperNumLeft++;
-           }
-           if (key.lowerState.ofPointer == OfPointer.LEFT) {
-             lowerNumLeft++;
-           }
-           upperLabels[i] = key.upperState.forestLabel;
-           lowerLabels[i] = key.lowerState.forestLabel;
-         }
-         return new ForestPair(upperLabels, lowerLabels, upperNumLeft, lowerNumLeft);         
+         return reifyTreePair(forestPath);
        }
     }
   }

@@ -5,8 +5,8 @@ import java.util.*;
 // Represents nodes and their corresponding subtrees in the tree-pair
 // representation of elements of F.
 public class Node {
-  protected Node left, right, parent;
-  protected int index;
+  public Node left, right, parent;
+  public int index;
   
   protected Node() {}
   

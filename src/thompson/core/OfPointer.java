@@ -1,5 +1,5 @@
 package thompson.core;
 
-enum OfPointer {
+public enum OfPointer {
   LEFT, RIGHT
 }
