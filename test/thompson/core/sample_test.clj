@@ -1,5 +1,6 @@
 (ns thompson.core.sample-test
   (:use clojure.test)
+  (:require [clojure.contrib.seq-utils :as seq])
   (:import (thompson.core Sample ForestKey ForestState ForestLabel OfPointer)))
 
 (deftest test-count-forest-diagrams
@@ -13,11 +14,26 @@
 (deftest test-model-forest-diagrams
   (Sample/modelForestDiagrams 24))
 
-(deftest test-choose-random-forest-pair-fuzz
+(deftest test-choose-random-tree-pair-length-fuzz
   (let [model (Sample/modelForestDiagrams 46)]
     (dotimes [_ 1000]
       (let [t (Sample/chooseTreePair model 42)]
         (is (= 42 (.wordLength t)))))))
+
+(def word-lengths
+  [[2 12] [4 108] [6 906]]); [8 7280]])
+
+(deftest test-choose-random-tree-pair-dist-fuzz
+  (let [s (+ 4 (apply max (map first word-lengths)))
+        m (Sample/modelForestDiagrams s)]
+    (doseq [[word-length expected] word-lengths]
+      (let [a (take (* expected 100) (repeatedly #(Sample/chooseTreePair m word-length)))
+            h (seq/frequencies a)
+            n (count h)
+            d (vals h)]
+      (is (= expected n))
+      (is (< 50 (apply min d)))
+      (is (> 150 (apply max d)))))))
 
 (def forest-labels
   {:I ForestLabel/I
