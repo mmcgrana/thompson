@@ -6,7 +6,10 @@ import java.math.*;
 // Implementation of and extensions to various algorithms described in
 // "Counting elements and geodesics in Thompson's group F" by Elder, Fuxy, and
 // Rechintzer.
-public class Sample { 
+public class Sample {
+  final static BigInteger BI_TWO = new BigInteger("2");
+  final static BigInteger BI_FOUR = new BigInteger("4");
+
   private static ForestState[] updateLeft(ForestState state) {    
     ForestState[] nextStates;
     if (state.forestLabel == ForestLabel.L) {
@@ -105,7 +108,7 @@ public class Sample {
           case N: return 3;
           case L: return 1;
           case R: return 2;
-          case X: return 0;
+          case X: return 2;
         }
       default:
         throw new IllegalArgumentException();
@@ -145,6 +148,8 @@ public class Sample {
     return toKeys;
   }
 
+  // Returns an array indicating the number of unique forest diagrams for
+  // weight 4, 5, 6, ..., maxWeight-2, maxWeight-1, and maxWeight.
   public static BigInteger[] countForestDiagrams(int maxWeight) {
     BigInteger[] counts = new BigInteger[maxWeight-3];
     HashMap<ForestKey,BigInteger> countWeb = new HashMap<ForestKey,BigInteger>();
@@ -163,15 +168,33 @@ public class Sample {
         }
         countWeb.remove(fromKey);
       }
-      if (n >= 3)
-      counts[n-3] = countWeb.get(
-                      new ForestKey(n+1,
-                        new ForestState(ForestLabel.R, OfPointer.RIGHT, 0),
-                        new ForestState(ForestLabel.R, OfPointer.RIGHT, 0)));
+      if (n >= 3) {
+        counts[n-3] = countWeb.get(
+                        new ForestKey(n+1,
+                          new ForestState(ForestLabel.R, OfPointer.RIGHT, 0),
+                          new ForestState(ForestLabel.R, OfPointer.RIGHT, 0)));
+      }
     }
     return counts;
   }
   
+  // Returns an array indicating the number of unique elements of word length
+  // 0, 1, 2, ..., maxLenth-2, maxLength-1, and maxLength.
+  public static BigInteger[] countTreePairs(int maxLength) {
+    BigInteger[] fdCounts = countForestDiagrams(maxLength+4);
+    BigInteger[] tpCounts = new BigInteger[maxLength+1];
+    for (int l = 0; l <= maxLength; l++) {
+      if (l <= 1) {
+        tpCounts[l] = fdCounts[l];
+      } else if (l <= 3) {
+        tpCounts[l] = fdCounts[l].subtract(BI_TWO.multiply(fdCounts[l-2]));
+      } else {
+        tpCounts[l] = fdCounts[l].subtract(BI_TWO.multiply(fdCounts[l-2])).add(fdCounts[l-4]);
+      }
+    }
+    return tpCounts;
+  }
+
   static class BackPointer {
     private ForestKey backKey;
     private BigInteger backCount;
