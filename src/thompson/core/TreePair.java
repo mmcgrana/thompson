@@ -23,6 +23,10 @@ public class TreePair {
     return "[" + minusRoot.toString() + "|" + plusRoot.toString() + "]"; 
   }
   
+  public int hashCode() {
+    return this.toString().hashCode();
+  }
+
   public boolean equals(Object obj) {
     if (!(obj instanceof TreePair)) {
       return false;
