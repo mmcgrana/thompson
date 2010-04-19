@@ -8,8 +8,10 @@
          (seq (Sample/countForestDiagrams 12)))))
 
 (deftest test-count-tree-pairs
-  (is (= [1 4 12 36 108 314 906 2576 7280]
-         (seq (Sample/countTreePairs 8)))))
+  (is (= [1 4 12 36 108 314 906 2576 7280 20352 56664 156570 431238 1180968
+          3225940 8773036 23809148 64388402 173829458 467950860 1257901236
+          3373450744 9035758992]
+         (seq (Sample/countTreePairs 22)))))
 
 (deftest test-model-forest-diagrams
   (Sample/modelForestDiagrams 24))
