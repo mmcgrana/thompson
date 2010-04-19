@@ -431,6 +431,19 @@ public class Sample {
     return tree;
   }
 
+  public static void printForestPath(List<ForestKey> forestPath) {
+    for (int i = 0; i < forestPath.size(); i++) {
+      ForestKey forestKey = forestPath.get(i);
+      System.out.printf("%s %s %s %s %s %s\n",
+        forestKey.upperState.forestLabel,
+        forestKey.upperState.ofPointer,
+        forestKey.upperState.excess,
+        forestKey.lowerState.forestLabel,
+        forestKey.lowerState.ofPointer,
+        forestKey.lowerState.excess);
+    }
+  }
+
   // Returns a TreePair corresponding to the element represented by the given
   // forest encoding.
   public static TreePair reifyTreePair(List<ForestKey> forestPath) {
