@@ -238,10 +238,10 @@ public class TreePair {
       unifyFrom(plus.right, plusComplements, minus.right, minusComplements);
     } else if (plus.isLeaf() && minus.isCaret()) {
       plus.replace(minus.copy());
-      plusComplements.get(plus.index).replace(minus.copy());
+      plusComplements.get(plus.leafIndex).replace(minus.copy());
     } else {
       minus.replace(plus.copy());
-      minusComplements.get(minus.index).replace(plus.copy());
+      minusComplements.get(minus.leafIndex).replace(plus.copy());
     }
   }
 

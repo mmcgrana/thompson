@@ -6,7 +6,7 @@ import java.util.*;
 // representation of elements of F.
 public class Node {
   public Node left, right, parent;
-  public int index;
+  public int leafIndex, caretIndex;
   
   protected Node() {}
   
@@ -128,13 +128,13 @@ public class Node {
     }
   }
   
-  protected void indexLeaves() {
+  public void indexLeaves() {
     this.indexLeavesFrom(0);
   }
   
   private int indexLeavesFrom(int from) {
     if (this.isLeaf()) {
-      this.index = from;
+      this.leafIndex = from;
       return from + 1;
     } else {
       int newFrom = this.left.indexLeavesFrom(from);
@@ -144,6 +144,7 @@ public class Node {
   
   // Returns an inorder List of caret Nodes
   public ArrayList<Node> carets() {
+    // TODO: single node tree?
     ArrayList<Node> carets = new ArrayList<Node>();
     addCarets(carets, this);
     return carets;
@@ -154,6 +155,20 @@ public class Node {
       addCarets(carets, node.left);
       carets.add(node);
       addCarets(carets, node.right);
+    }
+  }
+  
+  public void indexCarets() {
+    this.indexCaretsFrom(0);
+  }
+  
+  private int indexCaretsFrom(int from) {
+    if (this.isCaret()) {
+      int leftFrom = this.left.indexCaretsFrom(from);
+      this.caretIndex = leftFrom;
+      return this.right.indexCaretsFrom(leftFrom+1);
+    } else {
+      return from;
     }
   }
   
