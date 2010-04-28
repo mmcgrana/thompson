@@ -1,4 +1,4 @@
-(ns thompson.stat.gnuplot
+(ns thompson.analysis.gnuplot
   (:require [clojure.contrib.shell-out :as shell]
             [clojure.contrib.duck-streams :as stream]
             [clojure.contrib.java-utils :as java]

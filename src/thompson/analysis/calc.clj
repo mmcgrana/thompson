@@ -1,10 +1,10 @@
-(ns thompson.stat.calc
+(ns thompson.analysis.calc
   (:require [clojure.contrib.duck-streams :as stream]
             [clojure.contrib.seq-utils :as seq]
             [clojure.contrib.str-utils :as str]
-            [thompson.stat.gnuplot :as gnuplot])
+            [thompson.analysis.gnuplot :as gnuplot])
   (:import thompson.core.GenExp
-           org.apache.commons.math.stat.descriptive.DescriptiveStatistics))
+           org.apache.commons.math.analysis.descriptive.DescriptiveStatistics))
 
 (defn words-path [l]
   (str "/tmp/thompson-samples/" l ".txt"))
