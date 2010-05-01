@@ -51,8 +51,7 @@ public class GenExp {
       gens.add(Integer.valueOf(genStr));
       exps.add(Integer.valueOf(expStr));
     }
-    return new GenExp(Util.toIntArray(gens),
-                            Util.toIntArray(exps));
+    return new GenExp(Util.toIntArray(gens), Util.toIntArray(exps));
   }
 
   public String toString() {
@@ -75,6 +74,9 @@ public class GenExp {
     }
   }
   
+  // Returns a new GenExp corresponding to the reciever but having merged both
+  // adjacent terms sharing the same generator and eleimiting terms with 
+  // exponent 0.
   private GenExp coalesce() {
     int[] coalGens = new int[this.numTerms()];
     int[] coalExps = new int[this.numTerms()];
@@ -127,10 +129,8 @@ public class GenExp {
         int leftExp = exps[i];
         int rightGen = gens[i+1];
         int rightExp = exps[i+1];
-        if ((leftExp == 0) || (rightExp == 0)) {
-          // =~ 1 term, no shuffle
-        } else if (leftGen == rightGen) {
-          // need to coalesce these
+        if ((leftExp == 0) || (rightExp == 0) || leftGen == rightGen) {
+          // we can coalesce these two terms
           GenExp coal = new GenExp(gens, exps).coalesce();
           gens = coal.gens;
           exps = coal.exps;
@@ -187,7 +187,14 @@ public class GenExp {
     return new GenExp(gens, exps).coalesce();
   }
   
+  // Returns an array of 4 int arrays:
+  // 0 (pGens): Generators for pos. side of word in order of decreasing base.
+  // 1 (pExps): Exponents cooresponding to pGens.
+  // 2 (nGens): Generators for neg. side of word in order of decreasing base.
+  // 3 (nExps): Exponents corresponding to nGens.
+  // Assymes the terms are in normal form.
   private static int[][] splitTerms(GenExp be) {
+    // find the first index corresponding to a negative generator
     int firstNI = be.numTerms();
     for (int i = (be.numTerms() - 1); i >= 0; i--) {
       if (be.exps[i] < 0) {
@@ -195,6 +202,7 @@ public class GenExp {
       }
     }
 
+    // split into the 4 int arrays described above, pack, and return
     int pLength = firstNI;
     int nLength = be.numTerms() - firstNI;
     int[] pGens = new int[pLength];
@@ -221,6 +229,7 @@ public class GenExp {
     // assume we are working from normal form
     if (!this.isNormalForm()) { throw new IllegalArgumentException(this.toString()); }
     
+    // split terms out of unified arrays
     int[][] ret = splitTerms(this);
     int[] pGens = ret[0];
     int[] pExps = ret[1];
@@ -235,10 +244,8 @@ public class GenExp {
     while ((pAt < pLength) && (nAt < nLength)) {
       if (pGens[pAt] == nGens[nAt]) {
         // {p,n}Gap is number of moves needed to get an x_i+1 adjacent
-        int pGap = (pAt == 0) ? Integer.MAX_VALUE :
-                                pGens[pAt-1] - (pGens[pAt] + 1);
-        int nGap = (nAt == 0) ? Integer.MAX_VALUE :
-                                nGens[nAt-1] - (nGens[nAt] + 1);
+        int pGap = (pAt == 0) ? Integer.MAX_VALUE : pGens[pAt-1] - (pGens[pAt] + 1);
+        int nGap = (nAt == 0) ? Integer.MAX_VALUE : nGens[nAt-1] - (nGens[nAt] + 1);
         if ((pGap == 0) || (nGap == 0)) {
           // unique condition met
           pAt++;
@@ -286,7 +293,7 @@ public class GenExp {
       }
     }
     
-    // pack remaining terms into unified arrays
+    // pack remaining terms back into unified arrays
     int[] gens = new int[pLength + nLength];
     int[] exps = new int[pLength + nLength];
     for (int i = 0; i < pLength; i++) {

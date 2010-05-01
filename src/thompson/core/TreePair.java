@@ -39,7 +39,7 @@ public class TreePair {
 
   // Returns an element in generator-exponent form corresponding directly to
   // the recieving tree-pair instance. The classic leaf-exponent calculation is
-  // used. Note that the returned GenExp is not neccisarily in 'unique' normal
+  // used. Note that the returned GenExp is not necessarily in 'unique' normal
   // form; see GenExp#toUniqueNormalForm.
   public GenExp toNormalForm() {
     // size the product
