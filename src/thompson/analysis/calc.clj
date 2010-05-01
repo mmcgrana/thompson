@@ -200,6 +200,6 @@
   (print-cat-summary (str len " caret-types")      (caret-types      len))
   (print-cat-summary (str len " caret-type-pairs") (caret-type-pairs len)))
 
-(run 100)
-(run 200)
-(run 300)
+; (run 100)
+; (run 200)
+; (run 300)
