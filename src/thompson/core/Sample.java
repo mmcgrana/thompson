@@ -125,7 +125,7 @@ public class Sample {
     return keys;
   }
   
-  private static ArrayList<ForestKey> successorKeys(ForestKey fromKey) {
+  public static ArrayList<ForestKey> successorKeys(ForestKey fromKey) {
     ArrayList<ForestKey> toKeys = new ArrayList<ForestKey>();
     ForestState upperState = fromKey.upperState;
     ForestState lowerState = fromKey.lowerState;
@@ -193,26 +193,6 @@ public class Sample {
       }
     }
     return tpCounts;
-  }
-
-  static class BackPointer {
-    private ForestKey backKey;
-    private BigInteger backCount;
-    
-    BackPointer(ForestKey backKey, BigInteger backCount) {
-      this.backKey = backKey;
-      this.backCount = backCount;
-    }
-  }
-  
-  static class BackPointers {
-    private ArrayList<BackPointer> backPointers;
-    private BigInteger totalBackCount;
-    
-    BackPointers(BigInteger totalBackCount) {
-      this.backPointers = new ArrayList<BackPointer>();
-      this.totalBackCount = totalBackCount;
-    }
   }
   
   private static void addBackPointer(BackPointers backPointers, ForestKey backKey, BigInteger backCount) {

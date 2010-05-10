@@ -1,8 +1,6 @@
-(ns thompson.analysis.draw
-  (:require [clojure.contrib.duck-streams :as streams]
-            [clojure.contrib.str-utils :as str]
-            [clojure.contrib.seq-utils :as seq])
-  (:import (thompson.core GenExp TreePair Node)))
+(ns thompson.analysis.draw-graph
+  (:require [clojure.contrib.str-utils :as str])
+  (:import (thompson.core Sample)))
 
 (defn node-id [short-label #^Node node]
   (if (.isLeaf node)
