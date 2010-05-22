@@ -1,45 +1,49 @@
 (ns thompson.analysis.draw-graph
-  (:require [clojure.contrib.str-utils :as str])
-  (:import (thompson.core Sample)))
+  (:import (thompson.core Sample ForestKey ForestState ForestLabel OfPointer
+                          BackPointers BackPointer)))
 
-(defn node-id [short-label #^Node node]
-  (if (.isLeaf node)
-    (str short-label "l" (.leafIndex node))
-    (str short-label "c" (.caretIndex node))))
 
-(defn edge-line [short-label caret child]
-  (str (node-id short-label caret) " -> " (node-id short-label child) ";"))
+(defn vertex-label [model vertex]
+  (str vertex))
+  ;(str "\"" vertex " (" (.totalBackCount #^BackPointers (get model vertex)) ")\""))
 
-(defn tree-lines [short-label #^Node root]
-  (.indexLeaves root)
-  (.indexCarets root)
-  (mapcat
-    (fn [#^Node caret]
-      [(edge-line short-label caret (.left caret))
-       (edge-line short-label caret (.right caret))])
-    (.carets root)))
+(defn edge-label [model from-vertex]
+  (str (.totalBackCount #^BackPointers (get model from-vertex))))
 
-(defn render-tree-pair [#^TreePair tp]
-  (str/str-join "\n"
-    (concat
-      ["digraph pair {"]
-      ["subgraph minus {"]
-      (tree-lines "m" (.minusRoot tp))
-      ["}"]
-      ["subgraph plus {"]
-      (tree-lines "p" (.plusRoot tp))
-      ["}"]
-      ["}"])))
+(defn find-viable-vertices [model max-weight]
+  (let [final-vertex (ForestKey. max-weight
+                       (ForestState. ForestLabel/R OfPointer/RIGHT 0)
+                       (ForestState. ForestLabel/R OfPointer/RIGHT 0))]
+    (loop [found #{} unexplored (list final-vertex)]
+      (if (empty? unexplored)
+        found
+        (let [[unexplored-head & unexplored-tail] unexplored]
+          (if (found unexplored-head)
+            (recur found unexplored-tail)
+            (let [unexplored-new (map #(.backKey #^BackPointer %)
+                                      (.backPointers #^BackPointers (get model unexplored-head)))]
+              (recur (conj found unexplored-head)
+                     (concat unexplored-new unexplored-tail)))))))))
 
-(defn run [l n]
-  (let [ip    (str "/Users/mmcgrana/workspace/thompson-samples/" l ".txt")
-        lines (streams/read-lines ip)]
-    (doseq [[i line] (seq/indexed (take n lines))]
-      (let [tp (.toTreePair (GenExp/fromString line))
-            op (str "/Users/mmcgrana/workspace/thompson-drawings/" l "-" i "-pair.dot")
-            dt (render-tree-pair tp)]
-        (streams/spit op dt)))))
+(defn drawable-vertex? [max-weight #^ForestKey vertex]
+  (or (< (.weight vertex) max-weight)
+      (= vertex
+        (ForestKey. max-weight
+                    (ForestState. ForestLabel/R OfPointer/RIGHT 0)
+                    (ForestState. ForestLabel/R OfPointer/RIGHT 0)))))
 
-; (run 100 5)
-; (run 100 5)
-; (run 100 5)
+(defn run [max-weight]
+  (printf "digraph model {\n  rankdir=\"LR\";\n")
+  (let [model           (Sample/modelForestDiagrams max-weight)
+        viable-vertices (find-viable-vertices model max-weight)]
+    (doseq [from-vertex (keys model)]
+      (let [to-vertices (Sample/successorKeys from-vertex)]
+        (doseq [#^ForestKey to-vertex to-vertices]
+          (when (viable-vertices to-vertex)
+            (printf "  %s -> %s [label=%s]\n"
+                    (vertex-label model from-vertex)
+                    (vertex-label model to-vertex)
+                    (edge-label model from-vertex)))))))
+  (printf "}\n"))
+
+; (run (Integer/parseInt (first *command-line-args*)))
